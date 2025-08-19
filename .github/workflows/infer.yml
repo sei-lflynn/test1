@@ -1,9 +1,9 @@
-name: Infer Static Analysis - Develop
+name: Infer Static Analysis - Main
 
 on:
   pull_request:
     branches:
-      - develop
+      - main
 
 jobs:
   infer-analysis:
