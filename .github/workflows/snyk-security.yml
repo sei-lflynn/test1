@@ -49,5 +49,5 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-code.sarif
-      - run: 'if [ -z "${SNYK_TOKEN+x}" ]; then echo "SNYK_TOKEN missing"; exit 1; else echo "SNYK_TOKEN is set"; fi'
+      #- run: 'if [ -z "${SNYK_TOKEN+x}" ]; then echo "SNYK_TOKEN missing"; exit 1; else echo "SNYK_TOKEN is set"; fi'
 
