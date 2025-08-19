@@ -37,21 +37,27 @@ jobs:
 
       - name: Run Infer and emit SARIF (javac, smart file selection)
         run: |
-          set -euxo pipefail
-          export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
-          shopt -s nullglob
-          files=( *.java )
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No .java files found in repo root"; exit 1
-          elif [ ${#files[@]} -eq 1 ]; then
-            echo "Analyzing single Java file: ${files[0]}"
-            infer run --sarif -- javac "${files[0]}"
-          else
-            echo "Analyzing all Java files: ${files[*]}"
-            infer run --sarif -- javac "${files[@]}"
-          fi
+          # Build your project via the usual command after `infer run --`
+          infer run --sarif -- make
           test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
           cp infer-out/report.sarif infer-out/infer-code.sarif
+
+        # run: |
+        #   set -euxo pipefail
+        #   export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
+        #   shopt -s nullglob
+        #   files=( *.java )
+        #   if [ ${#files[@]} -eq 0 ]; then
+        #     echo "No .java files found in repo root"; exit 1
+        #   elif [ ${#files[@]} -eq 1 ]; then
+        #     echo "Analyzing single Java file: ${files[0]}"
+        #     infer run --sarif -- javac "${files[0]}"
+        #   else
+        #     echo "Analyzing all Java files: ${files[*]}"
+        #     infer run --sarif -- javac "${files[@]}"
+        #   fi
+        # test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
+        # cp infer-out/report.sarif infer-out/infer-code.sarif
 
       - name: Upload SARIF to GitHub code scanning
         uses: github/codeql-action/upload-sarif@v3
