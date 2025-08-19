@@ -14,6 +14,11 @@ jobs:
   infer-analysis:
     runs-on: ubuntu-latest
 
+    env:
+      INFER_VERSION: 1.2.0
+      INFER_BASENAME: infer-linux-x86_64-v1.2.0
+      INFER_INSTALL_DIR: ${{ github.workspace }}/.tools/infer/infer-linux-x86_64-v1.2.0
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,39 +29,62 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      - name: Install Infer 1.2.0 and add to PATH
+      - name: Cache Infer ${{ env.INFER_VERSION }}
+        id: infer-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.INFER_INSTALL_DIR }}
+          key: infer-${{ runner.os }}-${{ env.INFER_BASENAME }}-v1
+
+      - name: Install Infer (if cache miss)
+        if: steps.infer-cache.outputs.cache-hit != 'true'
         run: |
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y wget xz-utils build-essential m4
-          wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz
-          tar -xf infer-linux-x86_64-v1.2.0.tar.xz
-          echo "$PWD/infer-linux-x86_64-v1.2.0/bin" >> "$GITHUB_PATH"
-          export PATH="$PWD/infer-linux-x86_64-v1.2.0/bin:$PATH"
-          infer --version
+          mkdir -p "$(dirname "${INFER_INSTALL_DIR}")"
+          wget "https://github.com/facebook/infer/releases/download/${INFER_VERSION}/${INFER_BASENAME}.tar.xz"
+          tar -xf "${INFER_BASENAME}.tar.xz"
+          # Move the extracted folder into the cached install dir
+          mv "${INFER_BASENAME}" "${INFER_INSTALL_DIR}"
 
-      - name: Run Infer and emit SARIF (javac, smart file selection)
+      - name: Add Infer to PATH and verify
         run: |
           set -euxo pipefail
-          export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
-          shopt -s nullglob
-          files=( *.java )
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No .java files found in repo root"; exit 1
-          elif [ ${#files[@]} -eq 1 ]; then
+          echo "${INFER_INSTALL_DIR}/bin" >> "$GITHUB_PATH"
+          export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
+          infer --version
+
+      - name: Run Infer and emit SARIF (javac, recursive file discovery)
+        run: |
+          set -euxo pipefail
+          export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
+
+          # Collect Java files (prefer git-tracked, fallback to find)
+          if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            git ls-files -z -- '*.java' > /tmp/java_files.z || true
+          fi
+          if [ ! -s /tmp/java_files.z ]; then
+            find . -type f -name '*.java' -print0 > /tmp/java_files.z
+          fi
+
+          if [ ! -s /tmp/java_files.z ]; then
+            echo "No .java files found anywhere in the repository."
+            exit 1
+          fi
+
+          mapfile -d '' files < /tmp/java_files.z
+
+          if [ ${#files[@]} -eq 1 ]; then
             echo "Analyzing single Java file: ${files[0]}"
             infer run --sarif -- javac "${files[0]}"
           else
-            echo "Analyzing all Java files: ${files[*]}"
+            echo "Analyzing ${#files[@]} Java files"
             infer run --sarif -- javac "${files[@]}"
           fi
-        test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
-        cp infer-out/report.sarif infer-out/infer-code.sarif
-        # run: |
-        #   # Build your project via the usual command after `infer run --`
-        #   infer run --sarif -- make --keep-going
-        #   test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
-        #   cp infer-out/report.sarif infer-out/infer-code.sarif
+
+          test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
+          cp infer-out/report.sarif infer-out/infer-code.sarif
 
       - name: Upload SARIF to GitHub code scanning
         uses: github/codeql-action/upload-sarif@v3
