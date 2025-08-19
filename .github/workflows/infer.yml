@@ -1,9 +1,10 @@
 name: Infer Static Analysis - Main
 
 on:
+  push:
+    branches: ["main" ]
   pull_request:
-    branches:
-      - main
+    branches: ["main"]
 
 jobs:
   infer-analysis:
