@@ -29,10 +29,10 @@ jobs:
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y wget xz-utils build-essential m4
-          wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux64-v1.2.0.tar.xz
-          tar -xf infer-linux64-v1.2.0.tar.xz
-          echo "$PWD/infer-linux64-v1.2.0/bin" >> "$GITHUB_PATH"
-          export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
+          wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz
+          tar -xf infer-linux-x86_64-v1.2.0.tar.xz
+          echo "$PWD/infer-linux-x86_64-v1.2.0/bin" >> "$GITHUB_PATH"
+          export PATH="$PWD/infer-linux-x86_64-v1.2.0/bin:$PATH"
           infer --version
 
       - name: Run Infer and emit SARIF (javac, smart file selection)
