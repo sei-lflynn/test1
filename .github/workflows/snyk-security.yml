@@ -30,12 +30,9 @@ permissions:
 
 jobs:
   security:
-    # run if not a PR, or PR is from same repo (not a fork)
-    #if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      #- uses: actions/checkout@master
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@master
       - name: Run Snyk to check for vulnerabilities
         uses: snyk/actions/python@master
         continue-on-error: true # To make sure that SARIF upload gets called
@@ -50,5 +47,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-code.sarif
-      #- run: 'if [ -z "${SNYK_TOKEN+x}" ]; then echo "SNYK_TOKEN missing"; exit 1; else echo "SNYK_TOKEN is set"; fi'
-
