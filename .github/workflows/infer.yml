@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      INFER_VERSION: 1.2.0
+      INFER_VERSION: v1.2.0
       INFER_BASENAME: infer-linux-x86_64-v1.2.0
       INFER_INSTALL_DIR: ${{ github.workspace }}/.tools/infer/infer-linux-x86_64-v1.2.0
 
