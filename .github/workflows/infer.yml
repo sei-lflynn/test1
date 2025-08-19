@@ -1,9 +1,10 @@
-name: Infer Static Analysis - Develop (Java + SARIF)
+name: Infer Static Analysis - Main
 
 on:
+  push:
+    branches: [ "main" ]
   pull_request:
-    branches:
-      - develop
+    branches: [ "main" ]
 
 permissions:
   contents: read
