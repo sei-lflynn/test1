@@ -24,7 +24,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y wget unzip build-essential m4
           wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz
-          tar -xf https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz
+          tar -xf infer-linux-x86_64-v1.2.0.tar.xz
           echo "$PWD/infer-linux64-v1.2.0/bin" >> $GITHUB_PATH
 
       - name: Run Infer and emit SARIF
