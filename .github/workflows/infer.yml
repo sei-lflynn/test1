@@ -1,10 +1,13 @@
-name: Infer Static Analysis - Main
+name: Infer Static Analysis - Develop (Java + SARIF)
 
 on:
-  push:
-    branches: ["main" ]
   pull_request:
-    branches: ["main"]
+    branches:
+      - develop
+
+permissions:
+  contents: read
+  security-events: write
 
 jobs:
   infer-analysis:
@@ -12,25 +15,40 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Java (for Infer)
         uses: actions/setup-java@v4
         with:
           java-version: '11'
           distribution: 'temurin'
-      - name: Install Infer
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y wget unzip build-essential m4
-          wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux-x86_64-v1.2.0.tar.xz
-          tar -xf infer-linux-x86_64-v1.2.0.tar.xz
-          echo "$PWD/infer-linux64-v1.2.0/bin" >> $GITHUB_PATH
 
-      - name: Run Infer and emit SARIF
+      - name: Install Infer 1.2.0 and add to PATH
         run: |
-          # Build your project via the usual command after `infer run --`
-          infer run --sarif -- make
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y wget xz-utils build-essential m4
+          wget https://github.com/facebook/infer/releases/download/v1.2.0/infer-linux64-v1.2.0.tar.xz
+          tar -xf infer-linux64-v1.2.0.tar.xz
+          echo "$PWD/infer-linux64-v1.2.0/bin" >> "$GITHUB_PATH"
+          export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
+          infer --version
+
+      - name: Run Infer and emit SARIF (javac, smart file selection)
+        run: |
+          set -euxo pipefail
+          export PATH="$PWD/infer-linux64-v1.2.0/bin:$PATH"
+          shopt -s nullglob
+          files=( *.java )
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No .java files found in repo root"; exit 1
+          elif [ ${#files[@]} -eq 1 ]; then
+            echo "Analyzing single Java file: ${files[0]}"
+            infer run --sarif -- javac "${files[0]}"
+          else
+            echo "Analyzing all Java files: ${files[*]}"
+            infer run --sarif -- javac "${files[@]}"
+          fi
           test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
           cp infer-out/report.sarif infer-out/infer-code.sarif
 
