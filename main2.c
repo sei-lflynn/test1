@@ -72,7 +72,7 @@ int login() {
 }
 
 int main() {
-  // comment to run tests
+  // comment to run tests again
     printf("=== Welcome to InsecureLogin v1.1 ===\n");
 
     load_users(); // ⚠️ Prints attacker-controlled file contents
