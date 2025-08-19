@@ -55,34 +55,9 @@ jobs:
           export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
           infer --version
 
-      - name: Run Infer and emit SARIF (javac, recursive file discovery)
-        run: |
-          set -euxo pipefail
-          export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
-
-          # Collect Java files (prefer git-tracked, fallback to find)
-          if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-            git ls-files -z -- '*.java' > /tmp/java_files.z || true
-          fi
-          if [ ! -s /tmp/java_files.z ]; then
-            find . -type f -name '*.java' -print0 > /tmp/java_files.z
-          fi
-
-          if [ ! -s /tmp/java_files.z ]; then
-            echo "No .java files found anywhere in the repository."
-            exit 1
-          fi
-
-          mapfile -d '' files < /tmp/java_files.z
-
-          if [ ${#files[@]} -eq 1 ]; then
-            echo "Analyzing single Java file: ${files[0]}"
-            infer run --sarif -- javac "${files[0]}"
-          else
-            echo "Analyzing ${#files[@]} Java files"
-            infer run --sarif -- javac "${files[@]}"
-          fi
-
+      - name: Run Infer and emit SARIF
+        # Build your project via the usual command after `infer run --`
+          infer run --sarif -- make --keep-going
           test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
           cp infer-out/report.sarif infer-out/infer-code.sarif
 
