@@ -39,7 +39,7 @@ jobs:
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          command: code test
+          command: snyk code test
           args: --sarif-file-output=snyk-code.sarif
 
         # Push the Snyk Code results into GitHub Code Scanning tab
