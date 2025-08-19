@@ -4,7 +4,7 @@ import java.net.Socket;
 
 public class NoncompliantCertExample {
 
-  // NONCOMPLIANT example from CERT (as requested)
+  // NONCOMPLIANT example of CERT STR00-J from rule
   public final int MAX_SIZE = 1024;
 
   public String readBytes(Socket socket) throws IOException {
