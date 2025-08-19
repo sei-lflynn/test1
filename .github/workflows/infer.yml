@@ -38,7 +38,7 @@ jobs:
       - name: Run Infer and emit SARIF (javac, smart file selection)
         run: |
           # Build your project via the usual command after `infer run --`
-          infer run --sarif -- make
+          infer run --sarif -- make --keep-going
           test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
           cp infer-out/report.sarif infer-out/infer-code.sarif
 
