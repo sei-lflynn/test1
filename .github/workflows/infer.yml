@@ -55,6 +55,15 @@ jobs:
           export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
           infer --version
 
+      - name: Set up C/C++/ObjC (for Infer)
+        id: infer-native
+        run: |
+          set -euxo pipefail
+          export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
+          # Ensure C/C++/Objective-C build tools exist (make is in build-essential)
+          sudo apt-get update
+          sudo apt-get install -y build-essential clang || true
+
       - name: Run Infer and emit SARIF
         # Build your project via the usual command after `infer run --`
         run: |
