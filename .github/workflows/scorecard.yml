@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Checkout (no persisted creds, full history)
         #uses: actions/checkout@REPLACE_WITH_VERIFIED_SHA # e.g., v4 commit SHA
-        #uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 #v4.3.0
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 #v4.3.0
         with:
           persist-credentials: false
           fetch-depth: 0
