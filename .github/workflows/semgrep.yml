@@ -2,9 +2,6 @@ on:
   workflow_dispatch: {}
   pull_request: {}
   push:
-    # branches:
-    #   - main
-    #   - master
     paths:
       - .github/workflows/semgrep.yml
   schedule:
@@ -25,24 +22,25 @@ jobs:
       security-events: write
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      # “Deeper” scan knob (in seconds) – increases per-rule/file allowance
+      SEMGREP_TIMEOUT: "30"   # raise if you still see timeouts  :contentReference[oaicite:2]{index=2}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ---------- Official Semgrep Action ----------
-      - name: Run Semgrep (with extended security configs & SARIF)
-        uses: returntocorp/semgrep-action@master
+      # ----- Official (legacy) Semgrep Action: uses inputs, not args -----
+      - name: Run Semgrep (extended rulepacks; SARIF)
+        uses: returntocorp/semgrep-action@v1
         with:
-          args: >-
-            --sarif --output=semgrep.sarif
-            --config auto
-            --config p/owasp-top-ten
-            --config p/cwe-top-25
-            --config p/security-audit
-            --config p/secrets
-            --timeout=30 --timeout-threshold=0 --max-target-bytes=0
-            --metrics=off
+          # Multiple rulepacks for broader security coverage
+          config: >-
+            auto
+            p/owasp-top-ten
+            p/cwe-top-25
+            p/security-audit
+            p/secrets
+          generateSarif: "1"     # writes semgrep.sarif by default  :contentReference[oaicite:3]{index=3}
 
       - name: Upload SARIF to GitHub Security Dashboard
         uses: github/codeql-action/upload-sarif@v3
