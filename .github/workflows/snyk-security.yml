@@ -33,17 +33,70 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Run Snyk to check for vulnerabilities
+
+      # ---------- SAST (Snyk Code) ----------
+      - name: Run Snyk Code (SAST)
         uses: snyk/actions/python@master
-        continue-on-error: true # To make sure that SARIF upload gets called
+        continue-on-error: true  # ensure SARIF upload runs even if issues are found
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
           args: --sarif-file-output=snyk-code.sarif
 
-        # Push the Snyk Code results into GitHub Code Scanning tab
-      - name: Upload result to GitHub Code Scanning
+      - name: Upload Snyk Code SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-code.sarif
+          category: snyk-code
+
+      # ---------- SCA (Open Source / dependencies) ----------
+      - name: Run Snyk Open Source (SCA)
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --all-projects --detection-depth=6 --sarif-file-output=snyk-oss.sarif
+
+      - name: Upload Snyk OSS SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-oss.sarif
+          category: snyk-oss
+
+      # ---------- Container ----------
+      - name: Build container image
+        run: docker build -t local/app:${{ github.sha }} .
+
+      - name: Run Snyk Container
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: container test
+          args: local/app:${{ github.sha }} --file=Dockerfile --sarif-file-output=snyk-container.sarif
+
+      - name: Upload Snyk Container SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-container.sarif
+          category: snyk-container
+
+      # ---------- IaC ----------
+      - name: Run Snyk IaC
+        uses: snyk/actions/python@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: iac test
+          args: . --sarif-file-output=snyk-iac.sarif
+
+      - name: Upload Snyk IaC SARIF to GitHub Code Scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-iac.sarif
+          category: snyk-iac
