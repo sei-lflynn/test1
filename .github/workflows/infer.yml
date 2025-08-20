@@ -13,7 +13,6 @@ permissions:
 jobs:
   infer-analysis:
     runs-on: ubuntu-latest
-
     env:
       INFER_VERSION: v1.2.0
       INFER_BASENAME: infer-linux-x86_64-v1.2.0
@@ -45,7 +44,6 @@ jobs:
           mkdir -p "$(dirname "${INFER_INSTALL_DIR}")"
           wget "https://github.com/facebook/infer/releases/download/${INFER_VERSION}/${INFER_BASENAME}.tar.xz"
           tar -xf "${INFER_BASENAME}.tar.xz"
-          # Move the extracted folder into the cached install dir
           mv "${INFER_BASENAME}" "${INFER_INSTALL_DIR}"
 
       - name: Add Infer to PATH and verify
@@ -55,20 +53,45 @@ jobs:
           export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
           infer --version
 
-      - name: Set up C/C++/ObjC (for Infer)
-        id: infer-native
+      - name: Install native toolchains (C/C++/ObjC)
+        run: |
+          set -euxo pipefail
+          sudo apt-get update
+          # clang/clang++ for C/C++
+          # gobjc + gnustep base for ObjC builds on Ubuntu
+          sudo apt-get install -y \
+            build-essential \
+            clang \
+            pkg-config \
+            gobjc \
+            libgnustep-base-dev
+
+      # ---- CAPTURE (multi-language via your Makefile) ----
+      - name: Infer capture with Make (C/C++/ObjC/Java)
         run: |
           set -euxo pipefail
           export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
-          # Ensure C/C++/Objective-C build tools exist (make is in build-essential)
-          sudo apt-get update
-          sudo apt-get install -y build-essential clang || true
 
-      - name: Run Infer and emit SARIF
-        # Build your project via the usual command after `infer run --`
+          # Prefer Infer's clang wrappers and avoid ccache interfering with capture
+          export CC=clang
+          export CXX=clang++
+          export OBJC=clang
+          export OBJCXX=clang++
+          export CCACHE_DISABLE=1
+
+          # Ensure Make can find the configured javac (often not required, but harmless)
+          export JAVAC="$(command -v javac)"
+
+          # Two-phase is more robust than 'infer run'
+          infer capture --results-dir infer-out -- \
+            make --keep-going
+
+      # ---- ANALYZE ----
+      - name: Infer analyze and emit SARIF
         run: |
           set -euxo pipefail
-          infer run --sarif -- make --keep-going
+          export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
+          infer analyze --results-dir infer-out --sarif
           test -f infer-out/report.sarif || (echo "SARIF not found in infer-out/"; ls -R infer-out || true; exit 1)
           cp infer-out/report.sarif infer-out/infer-code.sarif
 
