@@ -31,7 +31,8 @@ jobs:
     steps:
       - name: Checkout (no persisted creds, full history)
         #uses: actions/checkout@REPLACE_WITH_VERIFIED_SHA # e.g., v4 commit SHA
-        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 #v4.3.0
+        #uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 #v4.3.0
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 #v5.0.0
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -44,8 +45,8 @@ jobs:
       - name: Run Scorecard
         id: scorecard
         #uses: ossf/scorecard-action@REPLACE_WITH_VERIFIED_SHA # pin to a v2.x commit SHA
-        #uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # pin to v2.4.2
-        uses: ossf/scorecard-action@f49aabe0b5af0936a0987cfb85d86b75731b0186 # pin to v2.4.1
+        uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # pin to v2.4.2
+        #uses: ossf/scorecard-action@f49aabe0b5af0936a0987cfb85d86b75731b0186 # pin to v2.4.1
         with:
           results_file: results.sarif
           results_format: sarif
