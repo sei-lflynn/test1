@@ -22,25 +22,28 @@ jobs:
       security-events: write
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-      # “Deeper” scan knob (in seconds) – increases per-rule/file allowance
-      SEMGREP_TIMEOUT: "30"   # raise if you still see timeouts  :contentReference[oaicite:2]{index=2}
+
+    container:
+      image: semgrep/semgrep
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ----- Official (legacy) Semgrep Action: uses inputs, not args -----
-      - name: Run Semgrep (extended rulepacks; SARIF)
-        uses: returntocorp/semgrep-action@v1
-        with:
-          # Multiple rulepacks for broader security coverage
-          config: >-
-            auto
-            p/owasp-top-ten
-            p/cwe-top-25
-            p/security-audit
-            p/secrets
-          generateSarif: "1"     # writes semgrep.sarif by default  :contentReference[oaicite:3]{index=3}
+      - name: Run Semgrep (broader rules; deeper scan; SARIF)
+        run: |
+          semgrep scan \
+            --config auto \
+            --config p/owasp-top-ten \
+            --config p/cwe-top-25 \
+            --config p/security-audit \
+            --config p/secrets \
+            --timeout=30 \
+            --timeout-threshold=0 \
+            --max-target-bytes=0 \
+            --sarif-output=semgrep.sarif
+      # --timeout/--timeout-threshold reduce skipped work; --max-target-bytes=0 avoids skipping large files.
+      # --sarif-output writes a SARIF file that GitHub can ingest. :contentReference[oaicite:8]{index=8}
 
       - name: Upload SARIF to GitHub Security Dashboard
         uses: github/codeql-action/upload-sarif@v3
