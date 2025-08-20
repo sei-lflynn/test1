@@ -3,7 +3,7 @@ policies:
   - id: default
     description: Minimal shim for new checks
     rules:
-      #- pattern: SBOM
-      #  severity: warning   # choose: note | warning | error
+      - pattern: SBOM
+        severity: warning   # choose: note | warning | error
       - pattern: Webhooks
         severity: error
