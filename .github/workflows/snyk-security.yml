@@ -49,8 +49,9 @@ jobs:
           snyk code test \
             --debug \
             --log-level=trace \
+            --severity-threshold=medium \
             --sarif-file-output=snyk-code.sarif
-            #--severity-threshold=medium \
+
       - name: Upload Snyk Code SARIF
         if: always()
         uses: github/codeql-action/upload-sarif@v3
