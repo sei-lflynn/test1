@@ -41,7 +41,6 @@ jobs:
             --timeout=30 \
             --timeout-threshold=0 \
             --max-target-bytes=0 \
-            --metrics=off \
             --sarif-output=semgrep.sarif
       # --timeout/--timeout-threshold reduce skipped work; --max-target-bytes=0 avoids skipping large files.
       # --sarif-output writes a SARIF file that GitHub can ingest. :contentReference[oaicite:8]{index=8}
