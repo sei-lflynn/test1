@@ -64,6 +64,7 @@ jobs:
             clang \
             pkg-config \
             gobjc \
+            gcc \
             libgnustep-base-dev
 
       # ---- CAPTURE (multi-language via your Makefile) ----
