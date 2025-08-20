@@ -64,8 +64,8 @@ jobs:
             clang \
             pkg-config \
             gobjc \
-            gnustep \
             libgnustep-base-dev
+            # gnustep \
             # gnustep-core-devel \
             # gnustep-config \
             # gnustep-devel \
