@@ -44,7 +44,10 @@ jobs:
           #  - Raise the bar: --severity-threshold=high
           #  - Include ignored (for audits): add --include-ignores
           #  - Exclude generated dirs: add --exclude=node_modules,dist,build
+          export SNYK_LOG_LEVEL=trace
           snyk code test \
+            --debug \
+            --log-level=trace \
             --severity-threshold=medium \
             --sarif-file-output=snyk-code.sarif
 
