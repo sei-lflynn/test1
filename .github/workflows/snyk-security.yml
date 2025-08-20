@@ -50,7 +50,7 @@ jobs:
           sarif_file: snyk-code.sarif
           category: snyk-code
 
-      ---------- SCA (Open Source / dependencies) ----------
+      #---------- SCA (Open Source / dependencies) ----------
       - name: Run Snyk Open Source (SCA)
         uses: snyk/actions/python@master
         continue-on-error: true
