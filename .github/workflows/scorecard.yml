@@ -31,7 +31,7 @@ jobs:
     steps:
       - name: Checkout (no persisted creds, full history)
         #uses: actions/checkout@REPLACE_WITH_VERIFIED_SHA # e.g., v4 commit SHA
-        uses: actions/checkout@v4 # e.g., v4 commit SHA
+        uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 #v4.3.0
         with:
           persist-credentials: false
           fetch-depth: 0
@@ -44,7 +44,7 @@ jobs:
       - name: Run Scorecard
         id: scorecard
         #uses: ossf/scorecard-action@REPLACE_WITH_VERIFIED_SHA # pin to a v2.x commit SHA
-        uses: ossf/scorecard-action@v2 # pin to a v2.x commit SHA
+        uses: ossf/scorecard-action@05b42c624433fc40578a4040d5cf5e36ddca8cde # pin to v2.4.2
         with:
           results_file: results.sarif
           results_format: sarif
@@ -61,7 +61,7 @@ jobs:
       - name: Upload results to GitHub code scanning (SARIF)
         if: always() # Upload even if Scorecard found issues so they appear in the UI
         #uses: github/codeql-action/upload-sarif@REPLACE_WITH_VERIFIED_SHA # pin to v3 commit SHA
-        uses: github/codeql-action/upload-sarif@REPLACE_WITH_VERIFIED_SHA # pin to v3 commit SHA
+        uses: github/codeql-action/upload-sarif@96f518a34f7a870018057716cc4d7a5c014bd61c # pinned to v3.29.10
         with:
           sarif_file: results.sarif
 
