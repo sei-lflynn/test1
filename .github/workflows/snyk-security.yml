@@ -27,7 +27,7 @@ jobs:
           submodules: recursive    # if you use submodules
 
       - name: Set up Snyk CLI
-        uses: snyk/actions/setup@v1
+        uses: snyk/actions/setup@master
         with:
           snyk-version: latest     # or pin a specific version
 
