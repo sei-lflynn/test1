@@ -33,8 +33,8 @@ jobs:
           snyk-version: latest   # or pin a version like "1.1298.3"
 
         - name: Verify Snyk CLI
-        run: |
-          snyk --version
+          run: |
+            snyk --version
 
       ############################################################
       # SAST — Snyk Code (multi-language; CWEs included in SARIF
