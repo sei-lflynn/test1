@@ -39,6 +39,7 @@ jobs:
       - name: Snyk Code (SAST) — SARIF
         continue-on-error: true
         run: |
+          pwd && ls -la
           # Scan entire repo. Narrow to a folder if needed for speed (e.g., "./src").
           # Hardening ideas:
           #  - Raise the bar: --severity-threshold=high
