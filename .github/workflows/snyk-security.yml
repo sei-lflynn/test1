@@ -51,18 +51,34 @@ jobs:
           category: snyk-code
 
       # ---------- SCA (Open Source / dependencies) ----------
-      - name: Run Snyk Open Source (SCA)
+      # - name: Run Snyk Open Source (SCA)
+      #   uses: snyk/actions/python@master
+      #   continue-on-error: true
+      #   env:
+      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      #   with:
+      #     command: test
+      #     args: --all-projects --detection-depth=6 --sarif-file-output=snyk-oss.sarif
+
+      # - name: Upload Snyk OSS SARIF to GitHub Code Scanning
+      #   uses: github/codeql-action/upload-sarif@v3
+      #   with:
+      #     sarif_file: snyk-oss.sarif
+      #     category: snyk-oss
+
+
+      # ---------- SCA (Open Source / dependencies) ----------
+      - name: Run Snyk Open Source (SCA) — unmanaged C/C++
         uses: snyk/actions/python@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --all-projects --detection-depth=6 --sarif-file-output=snyk-oss.sarif
+          args: --unmanaged --sarif-file-output=snyk-oss.sarif
 
-      - name: Upload Snyk OSS SARIF to GitHub Code Scanning
-        #uses: github/codeql-action/upload-sarif@v3
-	uses: github/codeql-action/upload-sarif@master
+      - name: Upload Snyk OSS SARIF
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-oss.sarif
           category: snyk-oss
