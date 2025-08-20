@@ -42,7 +42,7 @@ jobs:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: code test
-          args: --sarif-file-output=snyk-code.sarif
+          args: --sarif-file-output=snyk-code.sarif --severity-threshold=low
 
       - name: Upload Snyk Code SARIF to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3

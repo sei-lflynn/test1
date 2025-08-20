@@ -33,7 +33,12 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Semgrep CI (with SARIF)
-        run: semgrep ci --sarif --output=semgrep.sarif
+        run: semgrep ci --sarif --output=semgrep.sarif \
+             --config auto --config p/owasp-top-ten --config p/cwe-top-25 \
+             --config p/security-audit --config p/secrets \
+             --timeout=30 --timeout-threshold=0 --max-target-bytes=0 \
+             --metrics=off
+
 
       - name: Upload SARIF to GitHub Security Dashboard
         uses: github/codeql-action/upload-sarif@v3
