@@ -57,37 +57,48 @@ jobs:
         run: |
           set -euxo pipefail
           sudo apt-get update
-          # clang/clang++ for C/C++
-          # gobjc + gnustep base for ObjC builds on Ubuntu
-          sudo apt-get install -y \
-            build-essential \
-            clang \
-            pkg-config \
-            gobjc \
-            gcc \
-            libgnustep-base-dev
+          # Core toolchain
+          sudo apt-get install -y build-essential clang pkg-config
+          # GNUstep base & makefiles (headers + libs for -lgnustep-base)
+          sudo apt-get install -y libgnustep-base-dev gnustep-make
+          # Objective-C runtime dev package (provides libobjc.so)
+          # Pick the latest libobjc-*-dev available on the runner (e.g., libobjc-14-dev on Ubuntu 24.04)
+          LIBOBJC_DEV="$(apt-cache search -n '^libobjc-[0-9]+-dev$' | awk '{print $1}' | sort -V | tail -n1)"
+          if [ -n "${LIBOBJC_DEV}" ]; then
+            sudo apt-get install -y "${LIBOBJC_DEV}"
+          else
+            echo "No libobjc-*-dev package found via apt-cache" >&2
+            # Fallback: runtime (may be insufficient without -dev symlinks, but better than nothing)
+            sudo apt-get install -y libobjc4
+          fi
+          # Optional: show that the linker can now see libobjc
+          ldconfig -p | grep -E 'libobjc\.so' || true
 
-      # ---- CAPTURE (multi-language via your Makefile) ----
-      - name: Infer capture with Make (C/C++/ObjC/Java)
+      # -------- CAPTURE via your Makefile (covers C/C++/ObjC/Java) --------
+      - name: Infer capture with Make
         run: |
           set -euxo pipefail
           export PATH="${INFER_INSTALL_DIR}/bin:$PATH"
 
-          # Prefer Infer's clang wrappers and avoid ccache interfering with capture
+          # Ensure Infer wraps the compilers your Makefile uses
           export CC=clang
           export CXX=clang++
           export OBJC=clang
           export OBJCXX=clang++
           export CCACHE_DISABLE=1
 
-          # Ensure Make can find the configured javac (often not required, but harmless)
+          # Help Make find the configured javac (if it needs it)
           export JAVAC="$(command -v javac)"
 
-          # Two-phase is more robust than 'infer run'
+          # If your Makefile needs GNUstep flags, you can add:
+          # export OBJCFLAGS="$(gnustep-config --objc-flags) -fblocks"
+          # export LDFLAGS="$(gnustep-config --base-libs)"
+
+          # Two-phase is clearer and more robust than 'infer run -- make'
           infer capture --results-dir infer-out -- \
             make --keep-going
 
-      # ---- ANALYZE ----
+      # -------- ANALYZE & EMIT SARIF --------
       - name: Infer analyze and emit SARIF
         run: |
           set -euxo pipefail
