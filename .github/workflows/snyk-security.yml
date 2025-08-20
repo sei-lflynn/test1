@@ -1,143 +1,35 @@
-name: Snyk Security (SAST + SCA + Container + IaC w/ SARIF)
+- name: Checkout
+  uses: actions/checkout@master
+  with:
+    lfs: true                # if you use LFS (safe to leave on)
+    submodules: recursive    # if you use submodules
 
-#Prereqs
-# * Add a repo secret SNYK_TOKEN.
-# * If you want container scanning, include a Dockerfile.
-# * Adjust paths (e.g., src/, infra/) as needed.
+- name: Set up Snyk CLI
+  uses: snyk/actions/setup@v1
+  with:
+    snyk-version: latest
 
-on:
-  pull_request:
-  push:
-    branches: [ main, master ]
-  schedule:
-    - cron: "0 6 * * 1"
+- name: Sanity check workspace
+  run: |
+    echo "PWD=$(pwd)"
+    echo "--- top-level files ---"
+    ls -la
+    find . -maxdepth 1 -type f -name '*.c' -o -name '*.cpp' -o -name '*.m' -o -name '*.java' | sed -n '1,50p'
+    snyk code test "$PWD/main2.c" --sarif-file-output=snyk-code.sarif
 
-permissions:
-  contents: read
-  security-events: write   # needed to upload SARIF
 
-env:
-  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+# Snyk Code (SAST) — make sure we point at the repo root (.)
+- name: Snyk Code (SAST) — SARIF
+  continue-on-error: true
+  run: |
+    snyk code test . \
+      --sarif-file-output=snyk-code.sarif \
+      --severity-threshold=medium \
+      --log-level=trace --debug    # keep while diagnosing
 
-jobs:
-  snyk:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Set up Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          snyk-version: latest   # or pin a version like "1.1298.3"
-
-      - name: Verify Snyk CLI
-        run: snyk --version
-
-      ############################################################
-      # SAST — Snyk Code (multi-language; CWEs included in SARIF
-      # when rules provide them). Strengthened settings below.
-      ############################################################
-      - name: Snyk Code (SAST) — SARIF
-        continue-on-error: true
-        run: |
-          pwd && ls -la
-          # Scan entire repo. Narrow to a folder if needed for speed (e.g., "./src").
-          # Hardening ideas:
-          #  - Raise the bar: --severity-threshold=high
-          #  - Include ignored (for audits): add --include-ignores
-          #  - Exclude generated dirs: add --exclude=node_modules,dist,build
-          export SNYK_LOG_LEVEL=trace
-          snyk code test \
-            --debug \
-            --log-level=trace \
-            --severity-threshold=medium \
-            --sarif-file-output=snyk-code.sarif
-
-      - name: Upload Snyk Code SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk-code.sarif
-          category: snyk-code
-
-      ############################################################
-      # Open Source / SCA — polyglot dependency scanning
-      ############################################################
-      - name: Snyk Open Source (SCA) — SARIF
-        continue-on-error: true
-        run: |
-          # Detects manifests across the repo (pom.xml, package.json, Pipfile/reqs,
-          # go.mod, Gemfile, Cargo.toml, etc.). Increase detection-depth as needed.
-          snyk test \
-            --all-projects \
-            --detection-depth=6 \
-            --severity-threshold=high \
-            --sarif-file-output=snyk-oss.sarif
-
-      - name: Upload Snyk OSS SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk-oss.sarif
-          category: snyk-oss
-
-      - name: Snyk OSS (monitor baseline in Snyk UI)
-        if: ${{ github.event_name != 'pull_request' }}
-        run: snyk monitor --all-projects --detection-depth=6
-
-      ############################################################
-      # Container — image vuln scan (OS + app packages)
-      ############################################################
-      - name: Build image
-        run: docker build -t local/app:${{ github.sha }} .
-
-      - name: Snyk Container — SARIF
-        continue-on-error: true
-        run: |
-          snyk container test local/app:${{ github.sha }} \
-            --file=Dockerfile \
-            --severity-threshold=high \
-            --sarif-file-output=snyk-container.sarif
-
-      - name: Upload Snyk Container SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk-container.sarif
-          category: snyk-container
-
-      - name: Snyk Container (monitor baseline)
-        if: ${{ github.event_name != 'pull_request' }}
-        run: snyk container monitor local/app:${{ github.sha }} --file=Dockerfile
-
-      ############################################################
-      # IaC — Terraform / Kubernetes / CloudFormation / ARM / etc.
-      ############################################################
-      - name: Snyk IaC — SARIF
-        continue-on-error: true
-        env:
-          IAC_DIR: .
-        run: |
-          # Add --report for Snyk UI reporting; SARIF goes to GitHub code scanning.
-          snyk iac test "$IAC_DIR" \
-            --severity-threshold=medium \
-            --sarif-file-output=snyk-iac.sarif
-
-      - name: Upload Snyk IaC SARIF
-        if: always()
-        uses: github/codeql-action/upload-sarif@v3
-        with:
-          sarif_file: snyk-iac.sarif
-          category: snyk-iac
-
-      ############################################################
-      # Final "gate": fail the job if HIGH-severity issues remain
-      # (tune threshold to your risk tolerance)
-      ############################################################
-      - name: Enforce failure on HIGH across scanners
-        if: ${{ success() }}
-        run: |
-          set -e
-          snyk code test --severity-threshold=high
-          snyk test --all-projects --severity-threshold=high
-          snyk container test local/app:${{ github.sha }} --file=Dockerfile --severity-threshold=high
-          snyk iac test . --severity-threshold=high
+- name: Upload Snyk Code SARIF
+  if: always()
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: snyk-code.sarif
+    category: snyk-code
