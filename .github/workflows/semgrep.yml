@@ -41,9 +41,11 @@ jobs:
             --timeout=30 \
             --timeout-threshold=0 \
             --max-target-bytes=0 \
+            --dataflow-traces \
             --sarif-output=semgrep.sarif
       # --timeout/--timeout-threshold reduce skipped work; --max-target-bytes=0 avoids skipping large files.
       # --sarif-output writes a SARIF file that GitHub can ingest. :contentReference[oaicite:8]{index=8}
+      # --dataflow-traces to access detailed analysis steps, enhancing issue diagnosis and resolution.
 
 
       - name: Upload SARIF to GitHub Security Dashboard
