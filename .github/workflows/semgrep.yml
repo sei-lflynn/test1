@@ -32,7 +32,7 @@ jobs:
 
       # ---------- Official Semgrep Action ----------
       - name: Run Semgrep (with extended security configs & SARIF)
-        uses: returntocorp/semgrep-action@v1
+        uses: returntocorp/semgrep-action@master
         with:
           args: >-
             --sarif --output=semgrep.sarif
