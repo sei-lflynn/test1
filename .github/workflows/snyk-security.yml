@@ -1,65 +1,49 @@
-name: Snyk SAST
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# A sample workflow which sets up Snyk to analyze the full Snyk platform (Snyk Open Source, Snyk Code,
+# Snyk Container and Snyk Infrastructure as Code)
+# The setup installs the Snyk CLI - for more details on the possible commands
+# check https://docs.snyk.io/snyk-cli/cli-reference
+# The results of Snyk Code are then uploaded to GitHub Security Code Scanning
+#
+# In order to use the Snyk Action you will need to have a Snyk API token.
+# More details in https://github.com/snyk/actions#getting-your-snyk-token
+# or you can signup for free at https://snyk.io/login
+#
+# For more examples, including how to limit scans to only high-severity issues
+# and fail PR checks, see https://github.com/snyk/actions/
+
+name: Snyk Security
 
 on:
-  pull_request:
   push:
-    branches: [ main, master ]
-  schedule:
-    - cron: "0 6 * * 1"
+    # branches: ["main" ]
+  pull_request:
+    # branches: ["main"]
 
 permissions:
   contents: read
-  security-events: write   # needed to upload SARIF
-
-env:
-  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+  security-events: write
 
 jobs:
-  snyk:
+  security:
     runs-on: ubuntu-latest
-
     steps:
-      # Always checkout before scanning
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@master
+      - name: Run Snyk to check for vulnerabilities
+        uses: snyk/actions/python@master
+        continue-on-error: true # To make sure that SARIF upload gets called
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
-          lfs: true                # if you use LFS (safe to leave on)
-          submodules: recursive    # if you use submodules
+          command: code test
+          args: --sarif-file-output=snyk-code.sarif
 
-      - name: Set up Snyk CLI
-        uses: snyk/actions/setup@master
-        with:
-          snyk-version: latest     # or pin a specific version
-
-      - name: Verify Snyk CLI
-        run: snyk --version
-
-      - name: Sanity check workspace
-        run: |
-          echo "PWD=$(pwd)"
-          echo "--- top-level files ---"
-          ls -la
-          # Show up to 50 candidate source files in the repo root
-          find . -maxdepth 1 -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.m' -o -name '*.java' \) | sed -n '1,50p'
-
-      # Optional: single-file diagnostic to prove plumbing (different SARIF filename)
-      # - name: Snyk Code single-file probe (optional)
-      #   continue-on-error: true
-      #   run: |
-      #     snyk code test "$PWD/main2.c" --sarif-file-output=snyk-code-single.sarif
-
-      # Snyk Code (SAST) — make sure we point at the repo root (.)
-      - name: Snyk Code (SAST) — SARIF
-        continue-on-error: true
-        run: |
-          snyk code test . \
-            --sarif-file-output=snyk-code.sarif \
-            --severity-threshold=medium \
-            --log-level=trace --debug
-
-      - name: Upload Snyk Code SARIF
-        if: always()
+        # Push the Snyk Code results into GitHub Code Scanning tab
+      - name: Upload result to GitHub Code Scanning
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: snyk-code.sarif
-          category: snyk-code
