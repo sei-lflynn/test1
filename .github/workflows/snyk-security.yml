@@ -51,37 +51,38 @@ jobs:
           category: snyk-code
 
       #---------- SCA (Open Source / dependencies) ----------
-      - name: Run Snyk Open Source (SCA)
+      # ---------- SCA (Maven via pom.xml) ----------
+      - name: Run Snyk Open Source (Maven)
+        uses: snyk/actions/maven@master
+        continue-on-error: true
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          # If pom.xml isn't at repo root, change the path here:
+          args: --file=pom.xml --sarif-file-output=snyk-oss-maven.sarif
+
+      - name: Upload Snyk OSS (Maven) SARIF
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-oss-maven.sarif
+          category: snyk-oss-maven
+
+      # ---------- SCA (C/C++ without manifests) ----------
+      - name: Run Snyk Open Source (C/C++ unmanaged)
         uses: snyk/actions/python@master
         continue-on-error: true
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --all-projects --detection-depth=6 --sarif-file-output=snyk-oss.sarif
+          args: --unmanaged --sarif-file-output=snyk-oss-unmanaged.sarif
 
-      - name: Upload Snyk OSS SARIF to GitHub Code Scanning
+      - name: Upload Snyk OSS (unmanaged) SARIF
         uses: github/codeql-action/upload-sarif@v3
         with:
-          sarif_file: snyk-oss.sarif
-          category: snyk-oss
-
-
-      # # ---------- SCA (Open Source / dependencies) ----------
-      # - name: Run Snyk Open Source (SCA) — unmanaged C/C++
-      #   uses: snyk/actions/python@master
-      #   continue-on-error: true
-      #   env:
-      #     SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      #   with:
-      #     command: test
-      #     args: --unmanaged --sarif-file-output=snyk-oss.sarif
-
-      # - name: Upload Snyk OSS SARIF
-      #   uses: github/codeql-action/upload-sarif@v3
-      #   with:
-      #     sarif_file: snyk-oss.sarif
-      #     category: snyk-oss
+          sarif_file: snyk-oss-unmanaged.sarif
+          category: snyk-oss-unmanaged
 
       # ---------- Container ----------
       - name: Build container image
