@@ -1,35 +1,65 @@
-- name: Checkout
-  uses: actions/checkout@master
-  with:
-    lfs: true                # if you use LFS (safe to leave on)
-    submodules: recursive    # if you use submodules
+name: Snyk SAST
 
-- name: Set up Snyk CLI
-  uses: snyk/actions/setup@v1
-  with:
-    snyk-version: latest
+on:
+  pull_request:
+  push:
+    branches: [ main, master ]
+  schedule:
+    - cron: "0 6 * * 1"
 
-- name: Sanity check workspace
-  run: |
-    echo "PWD=$(pwd)"
-    echo "--- top-level files ---"
-    ls -la
-    find . -maxdepth 1 -type f -name '*.c' -o -name '*.cpp' -o -name '*.m' -o -name '*.java' | sed -n '1,50p'
-    snyk code test "$PWD/main2.c" --sarif-file-output=snyk-code.sarif
+permissions:
+  contents: read
+  security-events: write   # needed to upload SARIF
 
+env:
+  SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-# Snyk Code (SAST) — make sure we point at the repo root (.)
-- name: Snyk Code (SAST) — SARIF
-  continue-on-error: true
-  run: |
-    snyk code test . \
-      --sarif-file-output=snyk-code.sarif \
-      --severity-threshold=medium \
-      --log-level=trace --debug    # keep while diagnosing
+jobs:
+  snyk:
+    runs-on: ubuntu-latest
 
-- name: Upload Snyk Code SARIF
-  if: always()
-  uses: github/codeql-action/upload-sarif@v3
-  with:
-    sarif_file: snyk-code.sarif
-    category: snyk-code
+    steps:
+      # Always checkout before scanning
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          lfs: true                # if you use LFS (safe to leave on)
+          submodules: recursive    # if you use submodules
+
+      - name: Set up Snyk CLI
+        uses: snyk/actions/setup@v1
+        with:
+          snyk-version: latest     # or pin a specific version
+
+      - name: Verify Snyk CLI
+        run: snyk --version
+
+      - name: Sanity check workspace
+        run: |
+          echo "PWD=$(pwd)"
+          echo "--- top-level files ---"
+          ls -la
+          # Show up to 50 candidate source files in the repo root
+          find . -maxdepth 1 -type f \( -name '*.c' -o -name '*.cpp' -o -name '*.m' -o -name '*.java' \) | sed -n '1,50p'
+
+      # Optional: single-file diagnostic to prove plumbing (different SARIF filename)
+      # - name: Snyk Code single-file probe (optional)
+      #   continue-on-error: true
+      #   run: |
+      #     snyk code test "$PWD/main2.c" --sarif-file-output=snyk-code-single.sarif
+
+      # Snyk Code (SAST) — make sure we point at the repo root (.)
+      - name: Snyk Code (SAST) — SARIF
+        continue-on-error: true
+        run: |
+          snyk code test . \
+            --sarif-file-output=snyk-code.sarif \
+            --severity-threshold=medium \
+            --log-level=trace --debug
+
+      - name: Upload Snyk Code SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: snyk-code.sarif
+          category: snyk-code
