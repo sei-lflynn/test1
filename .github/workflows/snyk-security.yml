@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Set up Snyk CLI
-        uses: snyk/actions/setup@v1
+        uses: snyk/actions/setup@master
         with:
           snyk-version: latest   # or pin a version like "1.1298.3"
 
