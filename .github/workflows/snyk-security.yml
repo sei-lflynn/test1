@@ -61,7 +61,8 @@ jobs:
           args: --all-projects --detection-depth=6 --sarif-file-output=snyk-oss.sarif
 
       - name: Upload Snyk OSS SARIF to GitHub Code Scanning
-        uses: github/codeql-action/upload-sarif@v3
+        #uses: github/codeql-action/upload-sarif@v3
+	uses: github/codeql-action/upload-sarif@master
         with:
           sarif_file: snyk-oss.sarif
           category: snyk-oss
