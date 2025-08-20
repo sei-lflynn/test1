@@ -33,7 +33,7 @@ jobs:
       - name: Run Semgrep (broader rules; deeper scan; SARIF)
         run: |
           semgrep scan \
-            --config default \
+            --config auto \
             --config p/owasp-top-ten \
             --config p/cwe-top-25 \
             --config p/security-audit \
@@ -45,7 +45,6 @@ jobs:
       # --timeout/--timeout-threshold reduce skipped work; --max-target-bytes=0 avoids skipping large files.
       # --sarif-output writes a SARIF file that GitHub can ingest. :contentReference[oaicite:8]{index=8}
 
-      #            --config auto \
 
       - name: Upload SARIF to GitHub Security Dashboard
         uses: github/codeql-action/upload-sarif@v3
