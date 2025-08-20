@@ -64,12 +64,12 @@ jobs:
             clang \
             pkg-config \
             gobjc \
-            libgnustep-base-dev \
             gnustep \
-            gnustep-core-devel \
-            gnustep-config \
-            gnustep-devel \
-	    gnustep-make
+            libgnustep-base-dev
+            # gnustep-core-devel \
+            # gnustep-config \
+            # gnustep-devel \
+	    # gnustep-make
 
       # ---- CAPTURE (multi-language via your Makefile) ----
       - name: Infer capture with Make (C/C++/ObjC/Java)
