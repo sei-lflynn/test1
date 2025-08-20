@@ -3,7 +3,7 @@
 # Compilers used:
 # C files (.c) compiled with gcc into executables with the same basename.
 # C++ files (.cpp) compiled with g++ into executables with the same basename.
-# Objective-C files (.m) compiled with gcc -ObjC 
+# Objective-C files (.m) compiled with gcc -ObjC
 
 # Targets:
 # `make all`: builds Java + C + C++ + Objective-C
@@ -17,8 +17,10 @@
 .DEFAULT_GOAL := all
 
 JAVAC = javac
-CC = gcc
-CXX = g++
+# CC = gcc
+# CXX = g++
+CC = clang
+CXX = clang++
 OBJC = gcc   # On most systems, gcc with -ObjC handles Objective-C
 
 # --- Objective-C toolchain & flags (auto-detect OS) ---
