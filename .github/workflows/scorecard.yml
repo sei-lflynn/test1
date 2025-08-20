@@ -1,0 +1,75 @@
+name: Security – OpenSSF Scorecard
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1" # Mondays 03:17 UTC (weekly)
+  workflow_dispatch:
+
+# Default to read-only; jobs will explicitly request the minimal writes they need.
+permissions: read-all
+
+concurrency:
+  group: scorecard-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scorecard:
+    name: Run OpenSSF Scorecard
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Minimal additional permissions: read code + emit SARIF; OIDC if publishing results.
+    permissions:
+      contents: read
+      actions: read
+      security-events: write     # needed for SARIF upload to code scanning
+      id-token: write            # needed only if publish_results: true (kept on for scheduled runs)
+
+    steps:
+      - name: Checkout (no persisted creds, full history)
+        #uses: actions/checkout@REPLACE_WITH_VERIFIED_SHA # e.g., v4 commit SHA
+        uses: actions/checkout@v4 # e.g., v4 commit SHA
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      # Optional: Verify GitHub-provided OIDC is available (helps diagnose publish issues)
+      - name: Debug OIDC (optional)
+        if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
+        run: echo "OIDC should be available for publishing results."
+
+      - name: Run Scorecard
+        id: scorecard
+        #uses: ossf/scorecard-action@REPLACE_WITH_VERIFIED_SHA # pin to a v2.x commit SHA
+        uses: ossf/scorecard-action@v2 # pin to a v2.x commit SHA
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # Token is used for checks requiring repo-read (e.g., Branch-Protection);
+          # this is the ephemeral GITHUB_TOKEN with only the permissions declared above.
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          # Set to 'true' to publish to the public Scorecard results DB (only for public repos).
+          # Requires id-token: write (granted above) and runs best on schedule/dispatch events.
+          publish_results: true
+        # Harden the environment for the action step
+        env:
+          SCORECARD_EXPERIMENTAL: "false"
+
+      - name: Upload results to GitHub code scanning (SARIF)
+        if: always() # Upload even if Scorecard found issues so they appear in the UI
+        #uses: github/codeql-action/upload-sarif@REPLACE_WITH_VERIFIED_SHA # pin to v3 commit SHA
+        uses: github/codeql-action/upload-sarif@REPLACE_WITH_VERIFIED_SHA # pin to v3 commit SHA
+        with:
+          sarif_file: results.sarif
+
+      # Optional: Fail the job on serious Scorecard findings (tighten/relax to your policy).
+      # This keeps the SARIF uploaded but enforces a gate on CI.
+      - name: Enforce minimum Scorecard level (policy gate)
+        if: ${{ always() && steps.scorecard.outcome == 'success' }}
+        run: |
+          # Parse the JSON for score threshold if you also emit JSON results.
+          # For SARIF-only, you can enforce on presence of certain rule IDs.
+          echo "Policy gate placeholder: adjust to your org’s policy."
