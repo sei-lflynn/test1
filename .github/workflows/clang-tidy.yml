@@ -9,32 +9,42 @@ jobs:
   clang-tidy:
     runs-on: ubuntu-latest
     env:
-      # --- ccache tuning (safe defaults) ---
+      # ccache tuning
       CCACHE_DIR: ~/.cache/ccache
       CCACHE_BASEDIR: ${{ github.workspace }}
       CCACHE_MAXSIZE: 500M
+      # Choose the LLVM toolchain version to install/cache
+      LLVM_VERSION: "18"
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install tools
+      # Base packages: make toolchain, ccache, and bear (for compile_commands.json)
+      - name: Install base packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang-tidy clang ccache cmake build-essential
+          sudo apt-get install -y build-essential ccache bear pkg-config
 
-      # Cache pip (for clang-tidy-sarif)
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      # ---- Cached LLVM + clang-tidy install ----
+      - name: Install cached LLVM toolchain (clang/clang++/clang-tidy)
+        uses: KyleMayes/install-llvm-action@v2
         with:
-          python-version: "3.x"
-          cache: "pip"
+          version: ${{ env.LLVM_VERSION }}
+          directory: ${{ runner.tool_cache }}/llvm
 
-      # Install Rust toolchain (fast, no sudo)
-      - name: Install Rust
+      - name: Verify clang/clang-tidy in PATH
+        run: |
+          which clang
+          which clang++
+          which clang-tidy
+          clang --version
+          clang-tidy --version
+
+      # ---- clang-tidy-sarif via cargo (with caching) ----
+      - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      # (Optional but recommended) Cache cargo registry/git to speed up cargo install
       - name: Cache cargo registry and git db
         uses: actions/cache@v4
         with:
@@ -45,78 +55,52 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      # Install clang-tidy-sarif from crates.io
-      - name: Install clang-tidy-sarif
+      - name: Install clang-tidy-sarif (cargo)
         run: |
           set -euxo pipefail
           cargo install --locked clang-tidy-sarif
-
-      # Ensure cargo bin is on PATH for subsequent steps
-      - name: Add cargo bin to PATH and verify
-        run: |
-          set -euxo pipefail
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
-          clang-tidy-sarif --version
 
+      - name: Verify clang-tidy-sarif
+        run: clang-tidy-sarif --version
 
-
-      - name: Install clang-tidy-sarif
-        # run: pip install --upgrade clang-tidy-sarif
-        run: cargo install clang-tidy-sarif
-
-      - name: Add clang-tidy-sarif to PATH and verify
-        run: |
-          set -euxo pipefail
-          echo "./.cargo/bin" >> "$GITHUB_PATH"
-          export PATH="./.cargo/bin:$PATH"
-          clang-tidy-sarif --version
-
-      # Cache the CMake build directory (faster re-config and header discovery)
-      - name: Cache CMake build/
-        uses: actions/cache@v4
-        with:
-          path: build
-          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '.clang-tidy') }}
-
-      # Cache ccache (OPTIONAL: only helps if you compile; harmless otherwise)
+      # ccache (helps if your Make build compiles; harmless otherwise)
       - name: Cache ccache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ccache
-          key: ${{ runner.os }}-ccache-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/Makefile', '**/makefile', '**/*.mk') }}
           restore-keys: |
             ${{ runner.os }}-ccache-
 
-      # Find or create compile_commands.json (prefer existing, otherwise CMake)
+      # --- Build (only if needed) to produce compile_commands.json with Bear ---
       - name: Ensure compile_commands.json
         id: compdb
         shell: bash
         run: |
           set -euo pipefail
 
-          # Prefer an already-present database (repo root), then build/ if present
+          if [[ -f compile_commands.json ]]; then
+            echo "Found compile_commands.json at repo root."
+            echo "db=compile_commands.json" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "compile_commands.json not found; generating with Bear + Make..."
+          # Try a clean build first (ignore failures if clean is unsupported)
+          make clean >/dev/null 2>&1 || true
+
+          # Use Bear to wrap make; this will emit compile_commands.json in CWD
+          # If your project needs specific make targets or variables, adjust here.
+          bear -- make -j"$(nproc)"
+
           if [[ -f compile_commands.json ]]; then
             echo "db=compile_commands.json" >> "$GITHUB_OUTPUT"
-            echo "Found compile_commands.json at repo root."
-          elif [[ -f build/compile_commands.json ]]; then
-            echo "db=build/compile_commands.json" >> "$GITHUB_OUTPUT"
-            echo "Found compile_commands.json in build/."
-          else
-            echo "compile_commands.json not found; generating with CMake (with ccache launchers)..."
-            cmake -S . -B build \
-              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
-              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-
-            if [[ -f build/compile_commands.json ]]; then
-              echo "db=build/compile_commands.json" >> "$GITHUB_OUTPUT"
-            elif [[ -f compile_commands.json ]]; then
-              echo "db=compile_commands.json" >> "$GITHUB_OUTPUT"
-            else
-              echo "Failed to generate compile_commands.json" >&2
-              exit 1
-            fi
+            exit 0
           fi
+
+          echo "Failed to generate compile_commands.json with Bear + Make." >&2
+          exit 1
 
       - name: List source files
         id: sources
@@ -138,10 +122,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p reports
-          compdb="${{ steps.compdb.outputs.db }}"
-          echo "Using compile_commands.json at: ${compdb}"
-          # Process files in batches; don't fail the job on findings
-          xargs -a source_files.txt -r -n 50 clang-tidy -p "${compdb}" > reports/clang-tidy.txt || true
+          compdb_file="${{ steps.compdb.outputs.db }}"
+          compdb_dir="$(dirname "${compdb_file}")"
+          echo "Using compile database at: ${compdb_file}"
+          # Run in batches; do not fail the job on findings
+          xargs -a source_files.txt -r -n 50 clang-tidy -p "${compdb_dir}" > reports/clang-tidy.txt || true
 
       - name: Convert clang-tidy output to SARIF
         if: steps.sources.outputs.files != ''
@@ -150,7 +135,6 @@ jobs:
           if [[ -f reports/clang-tidy.txt ]]; then
             clang-tidy-sarif reports/clang-tidy.txt > reports/clang-tidy.sarif
           else
-            echo "No clang-tidy output; emitting empty SARIF."
             echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > reports/clang-tidy.sarif
           fi
 
@@ -160,10 +144,8 @@ jobs:
         with:
           sarif_file: reports/clang-tidy.sarif
 
-      # Optional visibility into ccache effectiveness (useful if you also build)
       - name: ccache stats (optional)
-        run: |
-          ccache -s || true
+        run: ccache -s || true
 
       - name: Skip notice (no sources)
         if: steps.sources.outputs.files == ''
