@@ -1,0 +1,132 @@
+name: Clang-Tidy Analysis
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    env:
+      # --- ccache tuning (safe defaults) ---
+      CCACHE_DIR: ~/.cache/ccache
+      CCACHE_BASEDIR: ${{ github.workspace }}
+      CCACHE_MAXSIZE: 500M
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy clang ccache cmake build-essential
+
+      # Cache pip (for clang-tidy-sarif)
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+          cache: "pip"
+
+      - name: Install clang-tidy-sarif
+        run: pip install --upgrade clang-tidy-sarif
+
+      # Cache the CMake build directory (faster re-config and header discovery)
+      - name: Cache CMake build/
+        uses: actions/cache@v4
+        with:
+          path: build
+          key: ${{ runner.os }}-cmake-build-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake', '.clang-tidy') }}
+
+      # Cache ccache (OPTIONAL: only helps if you compile; harmless otherwise)
+      - name: Cache ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: ${{ runner.os }}-ccache-${{ hashFiles('**/CMakeLists.txt', '**/*.cmake') }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      # Find or create compile_commands.json (prefer existing, otherwise CMake)
+      - name: Ensure compile_commands.json
+        id: compdb
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Prefer an already-present database (repo root), then build/ if present
+          if [[ -f compile_commands.json ]]; then
+            echo "db=compile_commands.json" >> "$GITHUB_OUTPUT"
+            echo "Found compile_commands.json at repo root."
+          elif [[ -f build/compile_commands.json ]]; then
+            echo "db=build/compile_commands.json" >> "$GITHUB_OUTPUT"
+            echo "Found compile_commands.json in build/."
+          else
+            echo "compile_commands.json not found; generating with CMake (with ccache launchers)..."
+            cmake -S . -B build \
+              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+              -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+              -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+
+            if [[ -f build/compile_commands.json ]]; then
+              echo "db=build/compile_commands.json" >> "$GITHUB_OUTPUT"
+            elif [[ -f compile_commands.json ]]; then
+              echo "db=compile_commands.json" >> "$GITHUB_OUTPUT"
+            else
+              echo "Failed to generate compile_commands.json" >&2
+              exit 1
+            fi
+          fi
+
+      - name: List source files
+        id: sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=$(git ls-files '*.c' '*.cc' '*.cpp' '*.cxx' || true)
+          if [[ -z "${files}" ]]; then
+            echo "No C/C++ source files found; creating empty list to skip clang-tidy."
+            echo "files=" >> "$GITHUB_OUTPUT"
+          else
+            printf "%s\n" ${files} > source_files.txt
+            echo "files=source_files.txt" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run clang-tidy
+        if: steps.sources.outputs.files != ''
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p reports
+          compdb="${{ steps.compdb.outputs.db }}"
+          echo "Using compile_commands.json at: ${compdb}"
+          # Process files in batches; don't fail the job on findings
+          xargs -a source_files.txt -r -n 50 clang-tidy -p "${compdb}" > reports/clang-tidy.txt || true
+
+      - name: Convert clang-tidy output to SARIF
+        if: steps.sources.outputs.files != ''
+        run: |
+          mkdir -p reports
+          if [[ -f reports/clang-tidy.txt ]]; then
+            clang-tidy-sarif reports/clang-tidy.txt > reports/clang-tidy.sarif
+          else
+            echo "No clang-tidy output; emitting empty SARIF."
+            echo '{"version":"2.1.0","$schema":"https://raw.githubusercontent.com/oasis-tcs/sarif-spec/master/Schemata/sarif-schema-2.1.0.json","runs":[]}' > reports/clang-tidy.sarif
+          fi
+
+      - name: Upload SARIF to GitHub
+        if: steps.sources.outputs.files != ''
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: reports/clang-tidy.sarif
+
+      # Optional visibility into ccache effectiveness (useful if you also build)
+      - name: ccache stats (optional)
+        run: |
+          ccache -s || true
+
+      - name: Skip notice (no sources)
+        if: steps.sources.outputs.files == ''
+        run: echo "No C/C++ source files found. Skipping clang-tidy."
