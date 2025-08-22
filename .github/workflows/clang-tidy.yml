@@ -30,8 +30,46 @@ jobs:
           python-version: "3.x"
           cache: "pip"
 
+      # Install Rust toolchain (fast, no sudo)
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      # (Optional but recommended) Cache cargo registry/git to speed up cargo install
+      - name: Cache cargo registry and git db
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      # Install clang-tidy-sarif from crates.io
       - name: Install clang-tidy-sarif
-        run: pip install --upgrade clang-tidy-sarif
+        run: |
+          set -euxo pipefail
+          cargo install --locked clang-tidy-sarif
+
+      # Ensure cargo bin is on PATH for subsequent steps
+      - name: Add cargo bin to PATH and verify
+        run: |
+          set -euxo pipefail
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          clang-tidy-sarif --version
+
+
+
+      - name: Install clang-tidy-sarif
+        # run: pip install --upgrade clang-tidy-sarif
+        run: cargo install clang-tidy-sarif
+
+      - name: Add clang-tidy-sarif to PATH and verify
+        run: |
+          set -euxo pipefail
+          echo "./.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="./.cargo/bin:$PATH"
+          clang-tidy-sarif --version
 
       # Cache the CMake build directory (faster re-config and header discovery)
       - name: Cache CMake build/

@@ -27,4 +27,5 @@ The code comes from various sources:
 * some GitHub Actions workflows (in the `.github/workflows` directory) were developed by myself, with GPT-5
   * snyk-security.yml
   * infer.yml
+  * clang-tidy.yml
 
