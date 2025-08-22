@@ -1,9 +1,9 @@
+// Insecure test bed
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-// Ryan's demo file
-
+// demo file from https://github.com/r-sei-test/scripting-test/blob/main/main.c
 
 // Hardcoded file
 #define CREDENTIALS_FILE "users.txt"
@@ -73,7 +73,7 @@ int login() {
 
 int main() {
   // test
-    printf("=== Welcome to InsecureLogin v1.1 ===\n");
+  printf("=== Welcome to InsecureLogin v1.1 ===\n");
 
     load_users(); // ⚠️ Prints attacker-controlled file contents
 
