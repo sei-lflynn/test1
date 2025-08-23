@@ -26,18 +26,20 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential ccache bear pkg-config
 
-      # ---- Cached LLVM + clang-tidy install ----
-      - name: Install cached LLVM toolchain (clang/clang++/clang-tidy)
-        uses: KyleMayes/install-llvm-action@v2
+      # Cache APT .deb downloads (speeds up subsequent runs)
+      - name: Cache apt archives
+        uses: actions/cache@v4
         with:
-          version: ${{ env.LLVM_VERSION }}
-          directory: ${{ runner.tool_cache }}/llvm
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-${{ hashFiles('.github/workflows/clang-tidy.yml') }}
+          restore-keys: |
+            ${{ runner.os }}-apt-
 
-      - name: Install runtime libs required by LLVM
+      # Install distro-matched clang/clang-tidy (no libtinfo5 needed on noble)
+      - name: Install clang/clang-tidy from Ubuntu
         run: |
           sudo apt-get update
-          # Prefer libtinfo5; on some images it may be named/aliased via libncurses5
-          sudo apt-get install -y libtinfo5 || sudo apt-get install -y libncurses5
+          sudo apt-get install -y clang clang-tidy
 
       - name: Verify clang/clang-tidy in PATH
         run: |
