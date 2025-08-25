@@ -38,8 +38,8 @@ jobs:
       - name: Install Bandit (with SARIF support)
 #        run: pip install 'bandit[sarif]'
         run: |
-	  pip install 'bandit[sarif]'
-	bandit --version
+         pip install 'bandit[sarif]'
+         bandit --version
 
       - name: Run Bandit (deep/verbose scan with CWE + SARIF)
         run: |
