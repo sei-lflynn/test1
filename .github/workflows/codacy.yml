@@ -38,20 +38,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Execute Codacy Analysis CLI and generate a SARIF output with the security issues identified during the analysis
       - name: Run Codacy Analysis CLI
         uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
         with:
           # Check https://github.com/codacy/codacy-analysis-cli#project-token to get your project token from your Codacy repository
           # You can also omit the token and run the tools that support default configurations
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
-          verbose: true
-          output: results.sarif
+
+          # --- make the scan more thorough / let heavy tools run ---
+          allow-network: true           # enables tools that need compilation/network (e.g., SpotBugs/FindSecBugs)
+          parallel: 1                   # run tools sequentially to reduce resource pressure (slower but more stable)
+          tool-timeout: 1hour           # give slow analyzers time to finish
+          max-tool-memory: 8g           # avoid OOM on big projects
+
+          # --- SARIF for GitHub Code Scanning (with CWE when available) ---
           format: sarif
-          # Adjust severity of non-security issues
-          gh-code-scanning-compat: true
+          output: results.sarif
+          gh-code-scanning-compat: true # adjust non-security severities for GitHub’s UI
+
+          # --- optional: ensure certain client-side security tools run (if applicable to your repo) ---
+          # run-gosec: "true"             # Go SAST (if you have Go)
+          # run-staticcheck: "true"        # Go general/static checks (finds correctness bugs)
+
+          # --- keep the job green so SARIF always uploads-----
           # Force 0 exit code to allow SARIF file generation
           # This will handover control about PR rejection to the GitHub side
+          verbose: true
           max-allowed-issues: 2147483647
 
       # Upload the SARIF file generated in the previous step
