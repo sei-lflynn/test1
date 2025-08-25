@@ -38,7 +38,7 @@ jobs:
         --format sarif
         --output osv-results.sarif
         --call-analysis=rust
-        --experimental-plugins lockfile,sbom,directory,govulncheck
+        --experimental-plugins lockfile,sbom,directory,artifact
         ./
   scan-pr:
     if: ${{ github.event_name == 'pull_request' || github.event_name == 'merge_group' }}
@@ -50,5 +50,5 @@ jobs:
         --format sarif
         --output osv-results.sarif
         --call-analysis=rust
-        --experimental-plugins lockfile,sbom,directory,govulncheck
+        --experimental-plugins lockfile,sbom,directory,artifact
         ./
