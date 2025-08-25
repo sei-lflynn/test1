@@ -8,7 +8,19 @@ on:
 
 jobs:
   scan:
-    name: gitleaks
+  - name: Gitleaks (full git history → SARIF)
+    run: |
+      docker run --rm -v "${{ github.workspace }}:/repo" ghcr.io/gitleaks/gitleaks:latest \
+        git --source="/repo" --report-format sarif --report-path "/repo/gitleaks-history.sarif" \
+        --log-opts="--all --remotes --full-history" --redact --verbose
+
+  - name: Upload SARIF
+    uses: github/codeql-action/upload-sarif@v3
+    with:
+      sarif_file: gitleaks-history.sarif
+
+
+    name: gitleaks (CLI)
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -18,46 +30,47 @@ jobs:
         with:
           fetch-depth: 0  # required for full-history scans
 
-      # 1) Thorough Gitleaks scan over full Git history (slow but exhaustive)
-      - name: Gitleaks (git history)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: >
-            detect
-            --source .
-            --report-format sarif
-            --report-path gitleaks-history.sarif
-            --log-opts="--all --remotes --full-history"
-            --redact
-            --verbose
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # only required for orgs
-          # you only need GITLEAKS_LICENSE if you’re running gitleaks-action on repos that belong to a GitHub organization.
-          # It’s not required for personal-account repositories
 
-      # 2) Additional scan of the working tree (catches uncommitted/generated files)
-      - name: Gitleaks (working tree)
-        uses: gitleaks/gitleaks-action@v2
-        with:
-          args: >
-            detect
-            --no-git
-            --source .
-            --report-format sarif
-            --report-path gitleaks-workspace.sarif
-            --redact
-            --verbose
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+      # Ensure all branches/tags are present so --log-opts="--all ..." actually scans everything
+      - name: Fetch all refs
+        run: |
+          git fetch --all --tags --prune
 
-      # 3) Upload SARIF results to GitHub code scanning
+      - name: Gitleaks (git history → SARIF)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+              git --source="/repo" \
+                  --report-format sarif \
+                  --report-path "/repo/gitleaks-history.sarif" \
+                  --log-opts="--all --full-history" \
+                  --redact \
+                  --verbose \
+                  --max-archive-depth 3 \
+                  --max-decode-depth 3
+
+      - name: Gitleaks (working tree → SARIF)
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+              dir "/repo" \
+                  --report-format sarif \
+                  --report-path "/repo/gitleaks-workspace.sarif" \
+                  --redact \
+                  --verbose \
+                  --max-archive-depth 3 \
+                  --max-decode-depth 3
+
       - name: Upload SARIF (history)
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gitleaks-history.sarif
+
       - name: Upload SARIF (workspace)
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gitleaks-workspace.sarif
+
+
