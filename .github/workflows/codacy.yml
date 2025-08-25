@@ -37,11 +37,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Install Codacy CLI v2 (Linux/WSL installer script)
-      - name: Install Codacy CLI v2
+      - name: Install Codacy CLI v2 (wrapper on PATH)
         run: |
-          bash <(curl -Ls https://raw.githubusercontent.com/codacy/codacy-cli-v2/main/codacy-cli.sh)
-          codacy-cli version
+          mkdir -p "$HOME/bin"
+          cat > "$HOME/bin/codacy-cli" <<'EOF'
+          #!/usr/bin/env bash
+          exec bash <(curl -Ls https://raw.githubusercontent.com/codacy/codacy-cli-v2/main/codacy-cli.sh) "$@"
+          EOF
+          chmod +x "$HOME/bin/codacy-cli"
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+      - name: Check version
+        run: codacy-cli version
 
       # (Optional) Initialize local config to include all available tools
       # or fetch repo config from Codacy if you prefer server-side settings.
