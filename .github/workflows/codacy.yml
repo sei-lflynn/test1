@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Run Codacy Analysis CLI
-        uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
+        #uses: codacy/codacy-analysis-cli-action@d840f886c4bd4edc059706d09c6a1586111c540b
         with:
           # Check https://github.com/codacy/codacy-analysis-cli#project-token to get your project token from your Codacy repository
           # You can also omit the token and run the tools that support default configurations
@@ -67,6 +67,49 @@ jobs:
           max-allowed-issues: 2147483647
 
       # Upload the SARIF file generated in the previous step
+      - name: Upload SARIF results file
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+jobs:
+  codacy-security-scan:
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+    name: Codacy Security Scan (CLI v2)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install Codacy CLI v2 (Linux/WSL installer script)
+      - name: Install Codacy CLI v2
+        run: |
+          bash <(curl -Ls https://raw.githubusercontent.com/codacy/codacy-cli-v2/main/codacy-cli.sh)
+          codacy-cli version
+
+      # (Optional) Initialize local config to include all available tools
+      # or fetch repo config from Codacy if you prefer server-side settings.
+      - name: Initialize Codacy CLI config
+        run: |
+          # Local mode: include all relevant tools & create .codacy/ with tool configs
+          codacy-cli init
+          # --- OR, to fetch your Codacy repo config instead (uncomment and set secrets) ---
+          # codacy-cli init \
+          #   --api-token "${{ secrets.CODACY_API_TOKEN }}" \
+          #   --provider gh \
+          #   --organization your-org \
+          #   --repository your-repo
+
+      # Install runtimes and tools declared in .codacy/codacy.yaml
+      - name: Install toolchains
+        run: codacy-cli install
+
+      # Run all configured tools and emit SARIF for GitHub Code Scanning
+      - name: Analyze (SARIF)
+        run: codacy-cli analyze --format sarif -o results.sarif
+
       - name: Upload SARIF results file
         uses: github/codeql-action/upload-sarif@v3
         with:
