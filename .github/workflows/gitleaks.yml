@@ -5,15 +5,57 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * *" # run once a day at 4 AM
+
 jobs:
   scan:
     name: gitleaks
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write   # needed to upload SARIF
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-      - uses: gitleaks/gitleaks-action@v2
+          fetch-depth: 0  # required for full-history scans
+
+      # 1) Thorough Gitleaks scan over full Git history (slow but exhaustive)
+      - name: Gitleaks (git history)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: >
+            detect
+            --source .
+            --report-format sarif
+            --report-path gitleaks-history.sarif
+            --log-opts="--all --remotes --full-history"
+            --redact
+            --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # Only required for Organizations, not personal accounts.
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # only required for orgs
+
+      # 2) Additional scan of the working tree (catches uncommitted/generated files)
+      - name: Gitleaks (working tree)
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: >
+            detect
+            --no-git
+            --source .
+            --report-format sarif
+            --report-path gitleaks-workspace.sarif
+            --redact
+            --verbose
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+      # 3) Upload SARIF results to GitHub code scanning
+      - name: Upload SARIF (history)
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks-history.sarif
+      - name: Upload SARIF (workspace)
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks-workspace.sarif
