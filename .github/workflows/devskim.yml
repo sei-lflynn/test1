@@ -42,5 +42,8 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: devskim-results.sarif
+          wait-for-processing: false
+          # Optional but helpful if you ever upload multiple SARIF files for the same commit
+          category: devskim
 
 
