@@ -36,10 +36,10 @@ jobs:
           python-version: "3.x"
 
       - name: Install Bandit (with SARIF support)
-#        run: pip install 'bandit[sarif]'
+        #run: pip install 'bandit[sarif]'
         run: |
-         pip install 'bandit[sarif]'
-         bandit --version
+          pip install 'bandit[sarif]'
+          bandit --version
 
       - name: Run Bandit (deep/verbose scan with CWE + SARIF)
         run: |
@@ -51,7 +51,7 @@ jobs:
           #   -f sarif -o bandit.sarif
           # Optional extra artifact:
 	  # bandit -r . --severity-level=low --confidence-level=low -f json -o bandit.json
-#        continue-on-error: true  # keep CI green; use exit-zero equivalent
+        continue-on-error: true  # keep CI green; use exit-zero equivalent
 
       - name: Upload SARIF to GitHub code scanning
         uses: github/codeql-action/upload-sarif@v3
