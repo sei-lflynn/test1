@@ -25,10 +25,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run DevSkim scanner
+      - name: Run DevSkim scanner (thorough + CWE-ready)
         uses: microsoft/DevSkim-Action@v1
+        with:
+          # Scan the whole repo (default) and also peek inside archives
+          directory-to-scan: .
+          should-scan-archives: true
+          # Make sure the output file is where the next step expects it
+          output-filename: devskim-results.sarif
+          # Pass extra CLI options to broaden checks & include lower-confidence results
+          extra-options: >
+            --confidence High,Medium,Low
+            --severity Critical,Important,Moderate,BestPractice,ManualReview
 
       - name: Upload DevSkim scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: devskim-results.sarif
+
+
