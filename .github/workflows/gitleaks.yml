@@ -32,7 +32,9 @@ jobs:
             --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # only required for orgs
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }} # only required for orgs
+          # you only need GITLEAKS_LICENSE if you’re running gitleaks-action on repos that belong to a GitHub organization.
+          # It’s not required for personal-account repositories
 
       # 2) Additional scan of the working tree (catches uncommitted/generated files)
       - name: Gitleaks (working tree)
@@ -48,7 +50,7 @@ jobs:
             --verbose
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          # GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       # 3) Upload SARIF results to GitHub code scanning
       - name: Upload SARIF (history)
