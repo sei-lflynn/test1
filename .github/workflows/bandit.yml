@@ -40,15 +40,14 @@ jobs:
 
       - name: Run Bandit (deep/verbose scan with CWE + SARIF)
         run: |
-          bandit --version
-          bandit -r . --severity-level=low -n 5 -f sarif -o bandit.sarif
-          # bandit -r . \
-          #   --severity-level=low \
-          #   --confidence-level=low \
-          #   -n 5 \
-          #   -f sarif -o bandit.sarif
-          # Optional extra artifact:
-          # bandit -r . --severity-level=low --confidence-level=low -f json -o bandit.json
+          #bandit -r . --severity-level=low -n 5 -f sarif -o bandit.sarif
+          bandit -r . \
+            --severity-level=low \
+            --confidence-level=low \
+            -n 5 \
+            -f sarif -o bandit.sarif
+          Optional extra artifact:
+          bandit -r . --severity-level=low --confidence-level=low -f json -o bandit.json
         continue-on-error: true  # keep CI green; use exit-zero equivalent
 
       - name: Upload SARIF to GitHub code scanning

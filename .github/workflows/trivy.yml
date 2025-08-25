@@ -48,6 +48,19 @@ jobs:
           template: '@/contrib/sarif.tpl'
           output: trivy-results.sarif
           severity: CRITICAL,HIGH,MEDIUM
+      - name: Run Trivy (vuln, misconfig, secret, license)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: 'vuln,misconfig,secret,license'
+          vuln-type: 'os,library'
+          format: 'sarif'                 # native SARIF (better for GitHub)
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM,LOW'
+          limit-severities-for-sarif: true
+          ignore-unfixed: false           # include issues without fixes (more thorough)
+          timeout: '15m'
 
       - name: Verify SARIF file
         run: |
@@ -59,3 +72,47 @@ jobs:
         if: success()
         with:
           sarif_file: trivy-results.sarif
+
+# The second job (below) targets IaC and Dockerfile misconfigurations only. It fails the workflow on HIGH/CRITICAL misconfigs.
+  trivy-config-scan:
+    name: Trivy Config (IaC & Dockerfiles)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+      actions: read
+
+    steps:
+      - name: Checkout repository
+      - uses: actions/checkout@v4
+
+      # Optional: reuse your Python setup if your IaC tooling or hooks need it
+      - name: Set up Python (optional)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      # Focused misconfiguration scan (IaC, Dockerfile, K8s, Helm, etc.)
+      - name: Run Trivy config scan (misconfig only)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'config'                 # analyze config files only
+          scan-ref: '.'                       # repository root
+          scanners: 'misconfig'               # limit to IaC/Dockerfile/K8s/Helm checks
+          format: 'sarif'                     # native SARIF for GitHub
+          output: 'trivy-config.sarif'
+          severity: 'CRITICAL,HIGH,MEDIUM'    # tune as desired
+          limit-severities-for-sarif: true
+          exit-code: '1'                      # fail job if selected severities are found
+          timeout: '10m'
+          hide-progress: true
+
+      - name: Verify SARIF file (config)
+        run: |
+          test -f trivy-config.sarif && echo "Config SARIF generated" || (echo "Config SARIF missing" && exit 1)
+
+      - name: Upload Trivy Config SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: success() || failure()           # upload even if the job failed due to exit-code
+        with:
+          sarif_file: trivy-config.sarif
