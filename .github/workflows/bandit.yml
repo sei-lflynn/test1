@@ -36,13 +36,11 @@ jobs:
           python-version: "3.x"
 
       - name: Install Bandit (with SARIF support)
-        #run: pip install 'bandit[sarif]'
-        run: |
-          pip install 'bandit[sarif]'
-          bandit --version
+        run: pip install 'bandit[sarif]'
 
       - name: Run Bandit (deep/verbose scan with CWE + SARIF)
         run: |
+          bandit --version
           bandit -r .  --severity-level=low -n 5 -f sarif -o bandit.sarif
           # bandit -r . \
           #   --severity-level=low \
