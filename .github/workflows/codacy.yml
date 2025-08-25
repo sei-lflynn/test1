@@ -52,9 +52,13 @@ jobs:
           # --- OR, to fetch your Codacy repo config instead (uncomment and set secrets) ---
           codacy-cli init \
             --api-token "${{ secrets.CODACY_API_TOKEN }}" \
-          #  --provider gh \
-          #  --organization your-org \
-          #  --repository your-repo
+            --provider gh \
+            --organization sei-lflynn \
+            --repository sei-lflynn/test1/
+
+           # Note the above `gh` stands for github, and users should substitute their own organization and repository
+           # --organization your-org \
+           # --repository your-repo
 
       # Install runtimes and tools declared in .codacy/codacy.yaml
       - name: Install toolchains
