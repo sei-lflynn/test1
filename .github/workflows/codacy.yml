@@ -45,6 +45,7 @@ jobs:
 
       # (Optional) Initialize local config to include all available tools
       # or fetch repo config from Codacy if you prefer server-side settings.
+      # Init issues
       - name: Initialize Codacy CLI config
         run: |
           # Local mode: include all relevant tools & create .codacy/ with tool configs
