@@ -8,28 +8,16 @@ on:
 
 jobs:
   scan:
-  - name: Gitleaks (full git history → SARIF)
-    run: |
-      docker run --rm -v "${{ github.workspace }}:/repo" ghcr.io/gitleaks/gitleaks:latest \
-        git --source="/repo" --report-format sarif --report-path "/repo/gitleaks-history.sarif" \
-        --log-opts="--all --remotes --full-history" --redact --verbose
-
-  - name: Upload SARIF
-    uses: github/codeql-action/upload-sarif@v3
-    with:
-      sarif_file: gitleaks-history.sarif
-
-
     name: gitleaks (CLI)
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      security-events: write   # needed to upload SARIF
+      security-events: write   # required to upload SARIF
+      actions: read            # helps avoid SARIF upload perms edge-cases
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # required for full-history scans
-
+          fetch-depth: 0 # required for full-history scans
 
       # Ensure all branches/tags are present so --log-opts="--all ..." actually scans everything
       - name: Fetch all refs
@@ -72,5 +60,3 @@ jobs:
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: gitleaks-workspace.sarif
-
-
