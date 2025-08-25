@@ -29,9 +29,9 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/repo" \
             ghcr.io/gitleaks/gitleaks:latest \
-              git --source="/repo" \
+              git \
                   --report-format sarif \
-                  --report-path "/repo/gitleaks-history.sarif" \
+                  --report-path /repo/gitleaks-history.sarif \
                   --log-opts="--all --full-history" \
                   --redact \
                   --verbose \
@@ -43,9 +43,9 @@ jobs:
           docker run --rm \
             -v "${{ github.workspace }}:/repo" \
             ghcr.io/gitleaks/gitleaks:latest \
-              dir "/repo" \
+              dir  \
                   --report-format sarif \
-                  --report-path "/repo/gitleaks-workspace.sarif" \
+                  --report-path /repo/gitleaks-workspace.sarif \
                   --redact \
                   --verbose \
                   --max-archive-depth 3 \
