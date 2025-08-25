@@ -1,0 +1,6 @@
+.codacy/
+  codacy.yaml                  # created by `codacy-cli init`
+  tools-configs/
+    clang-tidy/.clang-tidy
+    semgrep/semgrep.yml
+    findsecbugs/findsecbugs-include.xml

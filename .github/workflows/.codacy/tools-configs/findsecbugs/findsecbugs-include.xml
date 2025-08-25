@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+  <!-- Ensure only (or at least) SECURITY-category bugs are reported -->
+  <Match>
+    <Bug category="SECURITY"/>
+  </Match>
+</FindBugsFilter>

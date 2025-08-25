@@ -1,0 +1,30 @@
+# Semgrep config pointing to registry packs
+# These packs already include rules with CWE and OWASP metadata,
+# so CWE will appear in SARIF and GitHub’s Code Scanning UI.
+
+# You can add as many packs as you like here.
+# See https://semgrep.dev/explore/packs for options.
+
+# Semgrep config pointing to registry packs
+# These packs already include rules with CWE and OWASP metadata,
+# so CWE will appear in SARIF and GitHub’s Code Scanning UI.
+
+# You can add as many packs as you like here.
+# See https://semgrep.dev/explore/packs for options.
+
+configs:
+  # CWE Top 25 (most dangerous software errors)
+  - p/cwe-top-25
+
+  # OWASP Top 10 (latest OWASP categories, with CWE mappings)
+  - p/owasp-top-ten
+
+  # General security rules maintained by Semgrep team
+  - p/security-audit
+  - p/secrets
+
+  # (Optional) language-specific packs if you know your stack:
+  - p/python
+  # - p/javascript
+  - p/java
+  # - p/go
