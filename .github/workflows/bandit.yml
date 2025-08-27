@@ -46,7 +46,7 @@ jobs:
             --confidence-level=low \
             -n 5 \
             -f sarif -o bandit.sarif
-          Optional extra artifact:
+          # Optional extra artifact:
           bandit -r . --severity-level=low --confidence-level=low -f json -o bandit.json
         continue-on-error: true  # keep CI green; use exit-zero equivalent
 
