@@ -44,7 +44,7 @@ jobs:
             --dataflow-traces \
             --sarif-output=semgrep.sarif
       # --timeout/--timeout-threshold reduce skipped work; --max-target-bytes=0 avoids skipping large files.
-      # --sarif-output writes a SARIF file that GitHub can ingest. :contentReference[oaicite:8]{index=8}
+      # --sarif-output writes a SARIF file that GitHub can ingest.
       # --dataflow-traces to access detailed analysis steps, enhancing issue diagnosis and resolution.
 
 
