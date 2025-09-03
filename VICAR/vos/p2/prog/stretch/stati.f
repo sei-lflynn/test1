@@ -1,0 +1,115 @@
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C Calculate mean and sigma from input histogram
+C
+      SUBROUTINE STATI(HIST,mean,sigma,npts)
+      IMPLICIT NONE
+      INTEGER*4 HIST(-32768:32767)
+      REAL*4 MEAN,SIGMA		!Mean and sigma (returned)
+      INTEGER*4 NPTS		!Number of pixels in histogram (returned)      
+
+      COMMON/C3/INMIN,INMAX,DNMIN,DNMAX
+      INTEGER*4 INMIN,INMAX,DNMIN,DNMAX
+
+      INTEGER*4 IDN,NPIX
+      REAL*8 SUM,SUMSQ,DMEAN,DN
+      LOGICAL NPIX_OVERFLOW
+      LOGICAL NPTS_OVERFLOW
+      INTEGER*4 MAX_INT4
+
+      NPIX_OVERFLOW = .FALSE.
+      NPTS_OVERFLOW = .FALSE.
+      MAX_INT4 = 2147483647
+
+      SUMSQ=0.0D0
+      SUM=0.0D0
+      NPTS=0
+
+      DO IDN=INMIN,INMAX
+         NPIX = HIST(IDN)
+         IF (NPIX .LT. 0) THEN
+            NPIX = MAX_INT4
+            NPIX_OVERFLOW = .TRUE.
+            WRITE(*,*) "**** NPIX_OVERFLOW at DN", IDN
+         ENDIF
+	 DN = IDN
+         SUM = SUM + NPIX*DN
+         SUMSQ = SUMSQ + NPIX*DN*DN
+         NPTS = NPTS + NPIX
+         IF (NPTS .LT. 0) THEN
+            NPTS = MAX_INT4
+            NPTS_OVERFLOW = .TRUE.
+         ENDIF
+      END DO
+
+      IF (NPIX_OVERFLOW) THEN
+         CALL XVMESSAGE('**** WARNING: STATI NPIX OVERFLOW ****', ' ')
+         CALL XVMESSAGE('THE NOTED DN SHOULD BE EXCLUDED FROM HISTO',
+     +   ' ')
+      ENDIF
+      IF (NPTS_OVERFLOW) THEN
+         CALL XVMESSAGE('**** WARNING: STATI NPTS OVERFLOW ****', ' ')
+         CALL XVMESSAGE('**** DO NOT TRUST HISTO STATS ****', ' ')
+      ENDIF
+
+      IF (NPTS.GT.0) THEN
+         DMEAN = SUM/NPTS
+         MEAN = DMEAN
+         SIGMA=DSQRT(DABS(SUMSQ/NPTS-DMEAN*DMEAN))
+      ENDIF
+      RETURN
+      END
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C Calculate mean and sigma for byte histogram
+C
+      SUBROUTINE STATIB(HIST,mean,sigma,npts)
+      IMPLICIT NONE
+      INTEGER*4 HIST(0:255)
+      REAL*4 MEAN,SIGMA		!Mean and sigma (returned)
+      INTEGER*4 NPTS		!Number of pixels in histogram (returned)      
+
+      INTEGER*4 IDN,NPIX
+      REAL*8 SUM,SUMSQ,DMEAN,DN
+
+      SUMSQ=0.0D0
+      SUM=0.0D0
+      NPTS=0
+
+      DO IDN=0,255
+         NPIX = HIST(IDN)
+	 DN = IDN
+         SUM = SUM + NPIX*DN
+         SUMSQ = SUMSQ + NPIX*DN*DN
+         NPTS = NPTS + NPIX
+      END DO
+
+      IF (NPTS.GT.0) THEN
+         DMEAN = SUM/NPTS
+         MEAN = DMEAN
+         SIGMA=DSQRT(DABS(SUMSQ/NPTS-DMEAN*DMEAN))
+      ENDIF
+      RETURN
+      END
+
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+C Print the stretch table
+C
+      SUBROUTINE PTABLE(LUT,DNMIN,DNMAX)
+      INTEGER*4 DNMIN,DNMAX
+      INTEGER*2 LUT(-32768:32767)
+      CHARACTER*132 PRT, PRTOUT
+  180 FORMAT('IN  ',15I8)
+  190 FORMAT('OUT ',15I8)
+
+      CALL XVMESSAGE(' ', ' ')
+      CALL XVMESSAGE(' T R A N S F O R M A T I O N', ' ')
+
+      DO I=DNMIN,DNMAX,15
+         J = MIN0(I+14,DNMAX)
+         WRITE (PRT, 180) (K,K=I,J)
+         WRITE (PRTOUT, 190) (LUT(K),K=I,J)
+         CALL XVMESSAGE(PRT,' ')
+         CALL XVMESSAGE(PRTOUT,' ')
+      ENDDO
+      RETURN
+      END

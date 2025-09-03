@@ -1,0 +1,6 @@
+dist
+*.html
+*.json
+*.jar
+k6
+assets

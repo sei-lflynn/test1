@@ -1,0 +1,12 @@
+procedure
+refgbl $echo
+refgbl $autousage
+body
+enable-log
+let _onfail="continue"
+let $echo="yes"
+let $autousage = "no"
+! test for subroutine VWAIT
+tvwait
+disable-log
+end-proc

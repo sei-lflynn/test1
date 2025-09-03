@@ -1,0 +1,21 @@
+!****************************************************************************
+! TSTABLE77V2_VMS.PDF, unit test procedure for subroutine ABLE77V2.F.
+!*****************************************************************************
+procedure help=*
+refgbl $echo
+refgbl $syschar
+body
+enable-log
+
+let _onfail="continue"
+let  $echo="yes"
+WRITE "Testing subroutine ABLE77V2"
+
+! from /project/test_work/testdata/mipl/vgr/f1636832.geo
+table77v2 inp=f1636832.vic
+
+! from /project/test_work/testdata/mipl/vgr/able77v2.dat
+table77v2 inp=able77v2.vic
+
+disable-log
+end-proc

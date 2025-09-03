@@ -1,0 +1,25 @@
+!****************************************************************************
+! TSTGETCAMCON.PDF, unit test procedure for subroutine GETCAMCON.F
+!
+! NOTE: Since this routine heavily depends on GETPROJ, the test PDF files are 
+!       almost identical
+!****************************************************************************
+procedure help=*
+body
+
+enable-log
+
+tgetcamcon venus.img
+tgetcamcon 4600.byt
+tgetcamcon 445.rad
+tgetcamcon gllsumdrkcrnt.vic
+tgetcamcon f1636832.vic
+tgetcamcon uvh.img
+tgetcamcon labtest.img
+tgetcamcon n1356781097.2.vic
+tgetcamcon n1308947518.182-142523.vic
+tgetcamcon n1294639770.011-091050.vic
+
+disable-log
+
+end-proc

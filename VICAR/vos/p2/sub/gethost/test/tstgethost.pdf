@@ -1,0 +1,8 @@
+procedure
+body
+enable-log
+
+tgethost
+
+disable-log
+end-proc

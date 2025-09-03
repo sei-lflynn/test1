@@ -1,0 +1,35 @@
+plugins {
+  id 'java'
+  id 'application'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+
+  withJavadocJar()
+  withSourcesJar()
+}
+
+application {
+  mainClass = 'gov.nasa.jpl.aerie.merlin.worker.MerlinWorkerAppDriver'
+  applicationDefaultJvmArgs = ['-Xmx2g']
+}
+
+// Link references to standard Java classes to the official Java 11 documentation.
+javadoc.options.links 'https://docs.oracle.com/en/java/javase/11/docs/api/'
+javadoc.options.links 'https://commons.apache.org/proper/commons-lang/javadocs/api-3.9/'
+javadoc.options.addStringOption('Xdoclint:none', '-quiet')
+
+dependencies {
+  implementation project(':merlin-driver')
+  implementation project(':merlin-server')
+  implementation project(':parsing-utilities')
+  implementation project(':constraints')
+
+  implementation 'io.javalin:javalin:5.6.3'
+  implementation 'org.slf4j:slf4j-simple:2.0.7'
+  implementation 'org.postgresql:postgresql:42.6.1'
+  implementation 'com.zaxxer:HikariCP:5.0.1'
+}

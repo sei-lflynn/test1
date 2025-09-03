@@ -1,0 +1,282 @@
+LOCAL T1 STRING
+LOCAL T2 INT
+LOCAL T3 REAL
+LOCAL EXP REAL
+local dir string
+gen a.img 10 10
+Beginning VICAR task gen
+GEN Version 2019-05-28
+GEN task completed
+label-add a.img ITEMS="TEST1='FIRST TEST STRING' TEST2=123 TEST3=4.56"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword TEST1 added
+Keyword TEST2 added
+Keyword TEST3 added
+f2 a.img a.img func="in1"
+Beginning VICAR task f2
+F2 version 98-Aug-2015
+F2 using byte table lookup
+FUNCTION EVALUATED 256 TIMES
+label-add a.img ITEMS="TEST1='MIDDLE TEST STRING'"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword TEST1 added
+f2 a.img a.img func="in1"
+Beginning VICAR task f2
+F2 version 98-Aug-2015
+F2 using byte table lookup
+FUNCTION EVALUATED 256 TIMES
+label-add a.img ITEMS="TEST1='LAST TEST STRING'"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword TEST1 added
+label-list a.img 'nousrtim
+Beginning VICAR task label
+LABEL version 2019-09-06
+************************************************************
+ 
+        ************  File a.img ************
+                3 dimensional IMAGE file
+                File organization is BSQ
+                Pixels are in BYTE format from a X86-64-LIN host
+                1 bands
+                10 lines per band
+                10 samples per line
+                0 lines of binary header
+                0 bytes of binary prefix per line
+---- Task: GEN -- User:  --  ----
+IVAL=0.0
+SINC=1.0
+LINC=1.0
+BINC=1.0
+MODULO=0.0
+TEST1='FIRST TEST STRING'
+TEST2=123
+TEST3=4.56
+---- Task: F2 -- User:  --  ----
+FUNCTION='in1'
+TEST1='MIDDLE TEST STRING'
+---- Task: F2 -- User:  --  ----
+FUNCTION='in1'
+TEST1='LAST TEST STRING'
+ 
+************************************************************
+getlab inp=a.img lab_item=TEST1 itm_name=T1 itm_type=STRING  +
+   lab_type=HISTORY mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T1' should equal 'LAST TEST STRING'"
+'T1' should equal 'LAST TEST STRING'
+write "T1: LAST TEST STRING"
+T1: LAST TEST STRING
+getlab inp=a.img lab_item=TEST2 itm_name=T2 itm_type=INT  +
+   lab_type=HISTORY mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T2' should equal '123'"
+'T2' should equal '123'
+write "T2: 123"
+T2: 123
+getlab inp=a.img lab_item=TEST3 itm_name=T3 itm_type=REAL  +
+   lab_type=HISTORY mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T3' should equal '4.56'"
+'T3' should equal '4.56'
+write "T3: 4.559999942780e+00"
+T3: 4.559999942780e+00
+getlab inp=a.img lab_item=FORMAT itm_name=T1 itm_type=STRING  +
+   lab_type=SYSTEM mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T1' should equal 'BYTE'"
+'T1' should equal 'BYTE'
+write "T1: BYTE"
+T1: BYTE
+getlab inp=a.img lab_item=NL itm_name=T2 itm_type=INT  +
+   lab_type=SYSTEM mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T2' should equal '10'"
+'T2' should equal '10'
+write "T2: 10"
+T2: 10
+getlab inp=a.img lab_item=TEST1 itm_name=T1 itm_type=STRING  +
+   lab_type=HISTORY mode=EARLIEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T1' should equal 'FIRST TEST STRING'"
+'T1' should equal 'FIRST TEST STRING'
+write "T1: FIRST TEST STRING"
+T1: FIRST TEST STRING
+getlab inp=a.img lab_item=TEST1 itm_name=T1 itm_type=STRING  +
+   itm_task=F2 itm_inst=1 lab_type=HISTORY mode=INSTANCE
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "'T1' should equal 'MIDDLE TEST STRING'"
+'T1' should equal 'MIDDLE TEST STRING'
+write "T1: MIDDLE TEST STRING"
+T1: MIDDLE TEST STRING
+write "Test correct handling of nonexistent label item."
+Test correct handling of nonexistent label item.
+write "This case should generate an ABEND."
+This case should generate an ABEND.
+getlab inp=a.img lab_item=BADTEST itm_name=T1 itm_type=STRING  +
+   lab_type=HISTORY mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+[VIC2-GENERR] Exception in XLGET, processing file: a.img
+[VIC2-FNDKEY] Cannot find key; program error
+ ** ABEND called **
+continue
+getlab inp=a.img lab_item=TEST1 itm_name=T1 itm_type=STRING  +
+   lab_type=HISTORY mode=LATEST
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "T1: LAST TEST STRING"
+T1: LAST TEST STRING
+f2 inp=data/sum2.1 out=l1.a func=10
+Beginning VICAR task f2
+F2 version 98-Aug-2015
+F2 using hash table lookup
+FUNCTION EVALUATED 26 TIMES
+label-rep l1.a 'PROP property="CASSINI-ISS" item="EXPOSURE_DURATION=0"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword EXPOSURE_DURATION replaced
+label-list l1.a 'nousrtim
+Beginning VICAR task label
+LABEL version 2019-09-06
+************************************************************
+ 
+        ************  File l1.a ************
+                3 dimensional IMAGE file
+                File organization is BSQ
+                Pixels are in HALF format from a X86-64-LIN host
+                1 bands
+                512 lines per band
+                512 samples per line
+                0 lines of binary header
+                0 bytes of binary prefix per line
+---- Property: CASSINI-ISS ----
+MISSION_NAME='CASSINI'
+MISSION_PHASE_TYPE='BENCH'
+INSTRUMENT_ID='ISSNA'
+IMAGE_NUMBER=1
+IMAGE_TIME='1997-128T12:34:56.800'
+SOFTWARE_VERSION_ID='V4'
+INSTRUMENT_MODE_ID='SUM2'
+FILTER1_NAME='RED'
+FILTER2_NAME='CLR'
+GAIN_MODE_ID='100K'
+ENCODING_TYPE='NOTCOMP'
+CONVERSION_TYPE='8LSB'
+DETECTOR_TEMPERATURE=-90.0
+OPTICS_TEMPERATURE=-10.0
+FILTER_TEMPERATURE=-999.0
+LIGHT_FLOOD_STATE_FLAG='OFF'
+ANTIBLOOMING_STATE_FLAG='OFF'
+CALIB_LAMP_STATE_FLAG='OFF'
+COMPRESSION_PARAMETER_VALUE=-1249
+OFFSET=3
+DARK_CURRENT=2
+COMPRESSION_RATIO=-999.0
+TARGET_NAME='FLATFIELD'
+OBSERVATION_ID='LIGHT_XFR'
+ILLUMINANT='TUNGSTEN'
+LUMINANCE=5.1
+RADIANCE=5.1
+EXPOSURE_DURATION=0
+---- Task: F2 -- User:  --  ----
+FUNCTION='10'
+ 
+************************************************************
+getlab inp=l1.a lab_item="EXPOSURE_DURATION" itm_name=EXP lab_type=PROPERTY  +
+       itm_type=REAL itm_task="CASSINI-ISS"
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "EXP: 0.000000000000e+00"
+EXP: 0.000000000000e+00
+label-add l1.a 'prop property="CASSINI-ISS" item="MULTIVAL=(AA,BB,CC)"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword MULTIVAL added
+label-list l1.a 'nousrtim
+Beginning VICAR task label
+LABEL version 2019-09-06
+************************************************************
+ 
+        ************  File l1.a ************
+                3 dimensional IMAGE file
+                File organization is BSQ
+                Pixels are in HALF format from a X86-64-LIN host
+                1 bands
+                512 lines per band
+                512 samples per line
+                0 lines of binary header
+                0 bytes of binary prefix per line
+---- Property: CASSINI-ISS ----
+MISSION_NAME='CASSINI'
+MISSION_PHASE_TYPE='BENCH'
+INSTRUMENT_ID='ISSNA'
+IMAGE_NUMBER=1
+IMAGE_TIME='1997-128T12:34:56.800'
+SOFTWARE_VERSION_ID='V4'
+INSTRUMENT_MODE_ID='SUM2'
+FILTER1_NAME='RED'
+FILTER2_NAME='CLR'
+GAIN_MODE_ID='100K'
+ENCODING_TYPE='NOTCOMP'
+CONVERSION_TYPE='8LSB'
+DETECTOR_TEMPERATURE=-90.0
+OPTICS_TEMPERATURE=-10.0
+FILTER_TEMPERATURE=-999.0
+LIGHT_FLOOD_STATE_FLAG='OFF'
+ANTIBLOOMING_STATE_FLAG='OFF'
+CALIB_LAMP_STATE_FLAG='OFF'
+COMPRESSION_PARAMETER_VALUE=-1249
+OFFSET=3
+DARK_CURRENT=2
+COMPRESSION_RATIO=-999.0
+TARGET_NAME='FLATFIELD'
+OBSERVATION_ID='LIGHT_XFR'
+ILLUMINANT='TUNGSTEN'
+LUMINANCE=5.1
+RADIANCE=5.1
+EXPOSURE_DURATION=0
+MULTIVAL=('AA', 'BB', 'CC')
+---- Task: F2 -- User:  --  ----
+FUNCTION='10'
+ 
+************************************************************
+getlab inp=l1.a lab_item="MULTIVAL" itm_name=T1 lab_type=PROPERTY itm_type=STRING itm_task="CASSINI-ISS" element=2
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "T1: BB"
+T1: BB
+gen a.img
+Beginning VICAR task gen
+GEN Version 2019-05-28
+GEN task completed
+label-add a.img item="key=(abc,defgh)"
+Beginning VICAR task label
+LABEL version 2019-09-06
+Keyword key added
+getlab a.img key itm_name=T1 element=1 itm_type=string
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "T1: abc"
+T1: abc
+getlab a.img key itm_name=T1 element=2 itm_type=string
+Beginning VICAR task getlab
+GETLAB version 2019-06-13
+write "T1: defgh"
+T1: defgh
+if ($syschar(1)="UNIX")
+   ush rm a.img
+else
+end-if
+WRITE "TEST OF GETLAB COMPLETE."
+TEST OF GETLAB COMPLETE.
+disable-log

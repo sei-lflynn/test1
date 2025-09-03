@@ -1,0 +1,9 @@
+#define PROGRAM srchedge
+#define MODULE_LIST srchedge.c
+#define MAIN_LANG_C
+#define USES_ANSI_C
+#define R2LIB
+#define LIB_P2SUB
+
+#define LIB_RTL
+#define LIB_TAE

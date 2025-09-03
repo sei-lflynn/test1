@@ -1,0 +1,77 @@
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'jacoco'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+test {
+  useJUnitPlatform()
+  testLogging {
+    exceptionFormat = 'full'
+  }
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
+
+// The runtime environment this JAR will be deployed to doesn't know what this model depends on.
+// So the generated JAR must include its dependencies. (Except `merlin-sdk`, which is marked `compileTimeApi` by
+// `merlin-framework`, so that the runtime system and model JAR can agree on the same interfaces.)
+jar {
+  from {
+    configurations.runtimeClasspath.filter{ it.exists() }.collect{ it.isDirectory() ? it : zipTree(it) }
+  } {
+    exclude 'META-INF/LICENSE.txt', 'META-INF/NOTICE.txt'
+  }
+}
+
+dependencies {
+  annotationProcessor project(':merlin-framework-processor')
+
+  implementation project(':merlin-framework')
+  implementation project(':contrib')
+  implementation 'org.apache.commons:commons-lang3:3.13.0'
+
+  testImplementation project(':merlin-framework-junit')
+  testImplementation project(':orchestration-utils')
+  testImplementation project(':type-utils')
+  testImplementation 'org.assertj:assertj-core:3.24.2'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+javadoc.options.tags = [ "contact", "subsystem" ]
+
+publishing {
+  publications {
+    library(MavenPublication) {
+      version = findProperty('publishing.version')
+      from components.java
+    }
+  }
+
+  publishing {
+    repositories {
+      maven {
+        name = findProperty("publishing.name")
+        url = findProperty("publishing.url")
+        credentials {
+          username = System.getenv(findProperty("publishing.usernameEnvironmentVariable"))
+          password = System.getenv(findProperty("publishing.passwordEnvironmentVariable"))
+        }
+      }
+    }
+  }
+}

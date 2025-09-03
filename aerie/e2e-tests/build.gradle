@@ -1,0 +1,140 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
+plugins {
+  id 'java-library'
+  id 'jacoco'
+  id 'com.gradleup.shadow' version '8.3.0'
+}
+
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(21)
+  }
+}
+
+jacocoTestReport {
+  dependsOn test
+  reports {
+    xml.required = true
+  }
+}
+
+test {
+  onlyIf { false }
+}
+
+task e2eTest(type: Test) {
+  ext.parseEnvFile = { filePath ->
+    file(filePath).readLines().each() {
+      if (!it.isEmpty() && !it.startsWith("#")) {
+        def (key, value) = it.tokenize('=')
+        if (key.startsWith("export ")) {
+          key = key.split("export ")[1];
+        }
+        if (System.getenv(key) == null) {
+          environment key, value
+        }
+      }
+    }
+  }
+
+  dependsOn ":examples:banananation:assemble"
+  dependsOn ":examples:foo-missionmodel:assemble"
+
+  if(file('.env').exists()) {
+    parseEnvFile('.env')
+  } else if(file('../.env').exists()){
+    parseEnvFile('../.env')
+  }
+  environment "PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD", 1
+  // Run the tests in parallel to improve performance
+  maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+  useJUnitPlatform()
+
+  testLogging {
+    exceptionFormat = 'full'
+  }
+}
+
+dependencies {
+  annotationProcessor project(':procedural:processor')
+
+  implementation project(":procedural:scheduling")
+  implementation project(":procedural:timeline")
+  implementation project(':merlin-sdk')
+  implementation project(':type-utils')
+  implementation project(':contrib')
+
+  testImplementation "com.zaxxer:HikariCP:5.1.0"
+  testImplementation("org.postgresql:postgresql:42.6.0")
+
+  testImplementation 'com.microsoft.playwright:playwright:1.37.0'
+
+  testImplementation 'org.glassfish:javax.json:1.1.4'
+  testImplementation 'org.apache.commons:commons-lang3:3.13.0'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-engine:5.10.0'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params:5.10.0'
+}
+
+tasks.register('buildAllProcedureJars') {
+  group = 'ProcedureJars'
+
+  dependsOn "generateProcedureJarTasks"
+  dependsOn {
+    tasks.findAll { task -> task.name.startsWith('buildProcedureJar_') }
+  }
+}
+
+tasks.create("generateProcedureJarTasks") {
+  group = 'ProcedureJars'
+
+  final proceduresDir = findFirstMatchingBuildDir("generated/procedures")
+
+  if (proceduresDir == null) {
+    println "No procedures folder found"
+    return
+  }
+  println "Generating jar tasks for the following procedures directory: ${proceduresDir}"
+
+  final files = file(proceduresDir).listFiles()
+  if (files.length == 0) {
+    println "No procedures available within folder ${proceduresDir}"
+    return
+  }
+
+  files.toList().each { file ->
+    final nameWithoutExtension = file.name.replace(".java", "")
+    final taskName = "buildProcedureJar_${nameWithoutExtension}"
+
+    println "Generating ${taskName} task, which will build ${nameWithoutExtension}.jar"
+
+    tasks.register(taskName, ShadowJar) {
+      group = 'ProcedureJars'
+      configurations = [project.configurations.compileClasspath]
+      from sourceSets.main.output
+      archiveBaseName = "" // clear
+      archiveClassifier.set(nameWithoutExtension) // set output jar name
+      manifest {
+        attributes 'Main-Class': getMainClassFromGeneratedFile(file)
+      }
+      minimize()
+    }
+  }
+}
+
+private String findFirstMatchingBuildDir(String pattern) {
+  String found = null
+  final generatedDir = file("build/generated/sources")
+  generatedDir.mkdirs()
+  generatedDir.eachDirRecurse { dir -> if (dir.path.contains(pattern)) found = dir.path }
+  return found
+}
+
+private static String getMainClassFromGeneratedFile(File file) {
+  final fileString = file.toString()
+  final prefix = "build/generated/sources/annotationProcessor/java/main/"
+  final index = fileString.indexOf(prefix) + prefix.length()
+  final trimmed = fileString.substring(index).replace(".java", "")
+  return trimmed.replace("/", ".")
+}

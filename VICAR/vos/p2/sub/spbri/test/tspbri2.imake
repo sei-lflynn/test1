@@ -1,0 +1,17 @@
+#define PROGRAM   tspbri2
+
+#define MODULE_LIST tspbri2.c
+
+#define MAIN_LANG_C
+#define R2LIB 
+
+#define USES_ANSI_C
+
+#define LIB_SPICE
+#define LIB_P2SUB
+#define LIB_RTL
+#define LIB_TAE
+#define LIB_FORTRAN
+
+/* #define LIB_LOCAL	/ * for development, remove on delivery */ 
+/* #define DEBUG	/ * for development, remove on delivery */ 

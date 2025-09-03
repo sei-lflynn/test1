@@ -1,0 +1,164 @@
+procedure
+! Jul 25, 2016- RJB
+! TEST SCRIPT FOR ASTRTCHR
+! tests BYTE, HALF, FULL and REAL images
+!
+! Vicar Programs:
+!       gen list label-list
+!
+! External Programs;
+!   <none>
+!           
+! parameters:
+!   <none>
+!
+! Requires no external test data: 
+!
+refgbl $echo
+refgbl $autousage
+body
+let _onfail="stop"
+let $echo="no"
+let $autousage="none"
+!
+!  THIS IS A TEST OF PROGRAM astrtchr
+!
+!      FIRST TRY A SMALL IMAGE USING DEFAULT PARAMETER VALUES.
+!
+write "**********************************************"
+write "**********************************************"
+write "*** 					  ***"
+write "*** TEST PDF FOR astrtchr version 01.17.94 ***"
+write "*** 					  ***"
+write "**********************************************"
+write "**********************************************"
+let $echo="yes"
+
+enable-log
+
+!
+gen ASTRA NL=3 NS=2 'REAL4
+list ASTRA 'nousrtim
+label-list ASTRA 'nousrtim
+astrtchr INP=ASTRA OUT=ASTRAO
+list ASTRAO 'nousrtim
+label-list ASTRAO 'nousrtim
+!
+!   try various data formats with AREA & SIZE parameters.
+!
+gen ASTRBR NL=10 NS=10 'REAL4
+list ASTRBR 'nousrtim
+label-list ASTRBR 'nousrtim
+gen ASTRBI NL=10 NS=10 'FULL
+list ASTRBI 'nousrtim
+label-list ASTRBI 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRB AREA=(2,5,6,1) SIZE=(3,2,8,7) 'PRINT  +
+         LIMITS=(0,100) 'REAL   'BYTE
+list ASTRBRB 'nousrtim
+label-list ASTRBRB 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRH AREA=(2,5,6,1) SIZE=(3,2,8,7) 'PRINT  +
+         LIMITS=(0,100) 'REAL   'HALF
+list ASTRBRH 'nousrtim
+label-list ASTRBRH 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBIB AREA=(2,5,6,1) SIZE=(3,2,8,7) 'PRINT  +
+         LIMITS=(0,100) 'FULL   'BYTE
+list ASTRBIB 'nousrtim
+label-list ASTRBIB 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBIH AREA=(2,5,6,1) SIZE=(3,2,8,7) 'PRINT  +
+         LIMITS=(0,100) 'FULL   'HALF
+list ASTRBIH 'nousrtim
+label-list ASTRBIH 'nousrtim
+!
+!    try some other parameters on a real*4 image.
+!
+astrtchr ASTRBR ASTRBRC 'PRINT  LIMITS=(0,100) SORT=10 PERCENT=20
+list ASTRBRC 'nousrtim
+label-list ASTRBRC 'nousrtim
+!
+astrtchr ASTRBR ASTRBRC 'PRINT  LIMITS=(0,100) SORT=10 PERCENT=20 'NOCLIP
+list ASTRBRC 'nousrtim
+label-list ASTRBRC 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRD 'PRINT  LIMITS=(0,100) SORT=10 LINC=2 SINC=3
+list ASTRBRD 'nousrtim
+label-list ASTRBRD 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRE LIMITS=(0,100) EXCL=(0 0, 12 999999)
+list ASTRBRE 'nousrtim
+label-list ASTRBRE 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRE LIMITS=(0,100) EXCL=(0 0, 12 999999) 'STREXCL +
+ REPLACE=-32768 'HALF
+list ASTRBRE 'nousrtim
+label-list ASTRBRE 'nousrtim
+!
+astrtchr INP=ASTRBR OUT=ASTRBRF 'HALF LPERCENT=5 HPERCENT=25
+list ASTRBRF 'nousrtim
+label-list ASTRBRF 'nousrtim
+!
+!
+!    try some other parameters on a integer*4 image.
+!
+astrtchr INP=ASTRBI OUT=ASTRBIC 'PRINT  LIMITS=(0,100) SORT=10 PERCENT=20
+list ASTRBIC 'nousrtim
+label-list ASTRBIC 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBID 'PRINT  LIMITS=(0,100) SORT=10 LINC=2 SINC=3
+list ASTRBID 'nousrtim
+label-list ASTRBID 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBIE LIMITS=(0,100) EXCL=(0 0, 12 999999)
+list ASTRBIE 'nousrtim
+label-list ASTRBIE 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBIE LIMITS=(0,100) EXCL=(0 0, 12 999999) 'STREXCL +
+ REPLACE=-32768 OFORM=HALF
+list ASTRBIE 'nousrtim
+label-list ASTRBIE 'nousrtim
+!
+astrtchr INP=ASTRBI OUT=ASTRBIF 'HALF LPERCENT=5 HPERCENT=25
+list ASTRBIF 'nousrtim
+label-list ASTRBIF 'nousrtim
+!
+!   try some negative DNs
+!
+gen ASTRC NL=10 NS=10 'REAL4 IVAL=-10.01 LINC=1 SINC=1
+list ASTRC 'nousrtim
+label-list ASTRC 'nousrtim
+astrtchr ASTRC ASTRCO 'HALF 'PRINT LIMITS=(-100,100)      +
+         EXCL=(-9.01 -9.01, -3 3,  5.99 6.99 )
+list ASTRCO 'nousrtim
+label-list ASTRCO 'nousrtim
+!
+gen ASTRD NL=10 NS=10 'FULL IVAL=-10 LINC=1 SINC=1
+list ASTRD 'nousrtim
+label-list ASTRD 'nousrtim
+astrtchr ASTRD ASTRDO 'HALF 'PRINT LIMITS=(-100,100)      +
+         EXCL=(-9 -9, -3 3,  5 6 )
+list ASTRDO 'nousrtim
+label-list ASTRDO 'nousrtim
+!
+!   Tests 3D images  (added 8.11.2003 NTT)
+!
+gen ASTRE NL=10 NS=10 NB=10 'FULL IVAL=-10 LINC=1 SINC=1 NB=10
+list ASTRE 'nousrtim
+label-list ASTRE 'nousrtim
+astrtchr ASTRE ASTREO 'HALF 'PRINT LIMITS=(-100,100)      +
+         EXCL=(-9 -9, -3 3,  5 6 )
+list ASTREO 'nousrtim
+label-list ASTREO 'nousrtim
+!
+!
+
+ush rm ASTRA ASTRAO ASTRBI ASTRBIB ASTRBIC ASTRBID ASTRBIE ASTRBIF
+ush rm ASTRBIH ASTRBR ASTRBRB ASTRBRC ASTRBRD ASTRBRE ASTRBRF
+ush rm ASTRBRH ASTRC ASTRCO ASTRD ASTRDO ASTRE ASTREO
+
+disable-log
+
+let $echo="no"
+end-proc

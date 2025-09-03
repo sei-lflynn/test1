@@ -1,0 +1,82 @@
+procedure help=*
+refgbl $echo
+refgbl $syschar
+LOCAL DIR    TYPE=STRING 
+LOCAL INPIC   TYPE=STRING
+body
+enable-log
+
+let _onfail="continue"
+let $echo="no"
+
+WRITE "THIS IS A TEST OF MODULE ABLE97"
+WRITE " "
+write " Test Cassini ISS ground label"
+WRITE " "
+
+! From /project/test_work/testdata/cassini/iss/labtest.img
+LET INPIC   ="labtest.vic"
+
+let $echo="yes"
+label-list &INPIC
+
+TABLE97 &INPIC
+
+let $echo="no"
+WRITE " "
+write " Test Cassini ISS2 label"
+WRITE " "
+
+! From /project/test_work/testdata/cassini/casIss/y2.img
+LET INPIC   ="y2.vic"
+
+let $echo="yes"
+label-list &INPIC
+
+TABLE97 &INPIC
+
+let $echo="no"
+WRITE " "
+write " Test Cassini ISS new cruise label"
+WRITE " "
+
+! From /project/test_work/testdata/cassini/casIss/n1356781097.2
+LET INPIC   ="n1356781097.2.vic"
+
+let $echo="yes"
+label-list &INPIC
+
+TABLE97 &INPIC
+
+let $echo="no"
+WRITE " "
+write " Test Cassini ISS tour label"
+WRITE " "
+
+! From /project/test_work/testdata/cassini/iss/N1358285193_7.IMG
+LET INPIC   = "N1358285193_7.vic"
+
+let $echo="yes"
+label-list &INPIC
+
+TABLE97 &INPIC
+
+disable-log
+end-proc
+.title
+Test Procedure for the subroutine, ABLE97.
+.help
+
+   Intended to provide the unit test for the subroutine, ABLE97.
+   The test comprises:
+
+       1. Listing the label of a Cassini ISS ground label LABEL-LIST,
+       2. And comparing that with the list from the test program.
+          TABLE97, which uses ABLE97 to obtain the same information.
+
+   NOTE: Users should understand the Cassini flight and calibration labels
+         to correctly analyze the unit test results. The description of
+         the labels is documented in a SIS called EGSE VICAR IMAGE DATA FILE,
+         C. Avis and S. Kaki.
+.end
+

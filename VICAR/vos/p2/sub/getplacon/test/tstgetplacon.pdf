@@ -1,0 +1,14 @@
+procedure
+refgbl $echo
+refgbl $syschar
+body
+enable-log
+
+let _onfail="continue"
+let $echo="yes"
+
+tgetplacon  inp=f1636832.geo
+tgetplacon  inp=venus.img
+
+disable-log
+end-proc

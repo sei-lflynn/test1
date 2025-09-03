@@ -1,0 +1,7 @@
+createfile add1.dat1
+let $echo="no"
+CREATEFILE version 2015-11-19
+Overwriting file add1.dat1
+createfile add1.dat1
+let $echo="no"
+CREATEFILE version 2015-11-19

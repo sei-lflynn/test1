@@ -1,0 +1,18 @@
+procedure  help=*
+refgbl $echo
+body
+enable-log
+
+let _onfail="continue"
+Write " "
+Write " "
+Write " *************TEST ON VGRIMFMT ROUTINE************"
+Write " ***********Calling from FORTRAN program *********"
+
+tvgrimfmt
+
+Write " "
+Write " *************TEST COMPLETED************"
+
+disable-log
+end-proc

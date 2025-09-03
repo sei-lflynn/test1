@@ -1,0 +1,17 @@
+!****************************************************************************
+! TSTTIECHV.PDF, unit test procedure for subroutine TIECHV.F
+!****************************************************************************
+procedure help=*
+refgbl $echo
+
+body
+enable-log
+
+let _onfail="continue"
+let $echo="yes"
+ttiechv
+
+disable-log
+end-proc
+.title TSTTIECHV.PDF - unit test for subroutine TIECHV
+.end

@@ -1,0 +1,57 @@
+rootProject.name = 'aerie'
+
+// Mission Model support
+include 'merlin-sdk'
+include 'merlin-driver'
+include 'merlin-framework'
+include 'merlin-framework-junit'
+include 'merlin-framework-processor'
+include 'contrib'
+
+// Service support
+include 'parsing-utilities'
+include 'permissions'
+
+// Procedural post-simulation libraries
+include 'procedural:processor'
+include 'procedural:timeline'
+include 'procedural:constraints'
+include 'procedural:scheduling'
+include 'procedural:utils'
+
+// Procedural examples
+include 'procedural:examples:banana-procedures'
+
+// Services for deployment within the Aerie infrastructure
+include 'merlin-server'
+include 'merlin-worker'
+include 'scheduler-server'
+include 'scheduler-worker'
+include 'sequencing-server'
+include 'action-server'
+
+// Command-line interface direct to services
+include 'constraints'
+include 'scheduler-driver'
+
+// Stateless Mode
+include 'stateless-aerie'
+
+// Testing
+include 'db-tests'
+include 'e2e-tests'
+
+// Example mission models
+include 'examples:banananation'
+include 'examples:foo-missionmodel'
+include 'examples:config-with-defaults'
+include 'examples:config-without-defaults'
+include 'examples:minimal-mission-model'
+include 'examples:model-migration-1'
+include 'examples:model-migration-2'
+include 'examples:streamline-demo'
+include 'stateless-aerie'
+include 'orchestration-utils'
+include 'type-utils'
+include 'workspace-server'
+

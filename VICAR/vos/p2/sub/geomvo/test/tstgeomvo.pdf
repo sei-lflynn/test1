@@ -1,0 +1,19 @@
+!****************************************************************************
+! TSTGEOMVO.PDF, unit test procedure for subroutine GEOMVO.F
+!
+!THIS IS A TEST OF MODULE GEOMVO
+!****************************************************************************
+procedure help=*
+refgbl $echo
+body
+enable-log
+
+let _onfail="continue"
+let $echo="yes"
+
+tgeomvo
+
+disable-log
+end-proc
+.title TSTGEOMVO.PDF - unit test for subroutine GEOMVO
+.end

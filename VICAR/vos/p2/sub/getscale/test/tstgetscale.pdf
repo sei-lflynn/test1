@@ -1,0 +1,15 @@
+procedure
+refgbl $echo
+body
+enable-log
+
+let _onfail="continue"
+let $echo="yes"
+WRITE "This is a test of subroutine getscale"
+WRITE "Test on Voyager halfword flight image"
+
+tgetscale f1636832.vic  'IOF 
+tgetscale f1636832.vic  'RADIANCE 
+
+disable-log
+end-proc

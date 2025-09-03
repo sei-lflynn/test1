@@ -1,0 +1,78 @@
+!****************************************************************************
+! TSTGETLABCON.PDF, unit test procedure for subroutine GETLABCON.F
+!
+! The testings of projects WFPC1, WFPC2, VIS, MVM73 and MARINER 9 have been
+!   removed due to the unavailability of these images.  Please add these test 
+!   cases if images are available
+!
+! NOTE: Since this routine heavily depends on GETPROJ, the test PDF files are 
+!       almost identical
+!****************************************************************************
+procedure help=*
+  RefGbl $Echo
+  RefGbl $SysChar
+body
+enable-log
+
+  local GllFlightFull     type=string
+  local GllFlightSum      type=string
+  local GllCalibFull      type=string
+  local GllCalibSum       type=string
+  local GllSum            type=string
+  local VGR1              type=string
+  local VGR2              type=string
+  local CssCalib          type=string
+  local CssFlight         type=string
+  local CssS2             type=string
+  local CssTour           type=string
+
+
+  let $echo="no"
+
+  ! From /project/test_work/testdata/mipl/gll/venus.img
+  let GLLFlightFull = "venus.img.vic"
+
+  ! From /project/test_work/testdata/mipl/gll/4600.byt
+  let GLLFlightSum  = "4600.byt.vic"
+
+  ! From /project/test_work/testdata/mipl/gll/445.rad
+  let GllCalibFull  = "445.rad.vic"
+
+  ! From /project/test_work/testdata/mipl/gll/gllsumdrkcrnt.tst
+  let GLLCalibSum   = "gllsumdrkcrnt.tst.vic"
+
+  ! From /project/test_work/testdata/mipl/vgr/f1636832.fic
+  let VGR1          = "f1636832.fic.vic"
+
+  ! From /project/test_work/testdata/mipl/vgr/uvh.img
+  let VGR2          = "uvh.img.vic"
+
+  ! From /project/test_work/testdata/cassini/iss/labtest.img
+  let CssCalib      = "labtest.img.vic"
+
+  ! From /project/test_work/testdata/cassini/casIss/n1356781097.2
+  let CssFlight     = "n1356781097.2.vic"
+
+  ! From /project/test_work/testdata/cassini/casIss/n1308947518.182-142523
+  let CssS2         = "n1308947518.182-142523.vic"
+
+  ! From /project/test_work/testdata/cassini/iss/N1358285193_7.IMG
+  let CssTour       = "N1358285193_7.IMG.vic"
+
+  let $echo="yes"
+
+  TGETLABCON INP=@GllFlightFull
+  TGETLABCON INP=@GllFlightSum
+  TGETLABCON INP=@GllCalibFull
+  TGETLABCON INP=@GllCalibSum
+  TGETLABCON INP=@VGR1
+  TGETLABCON INP=@VGR2
+  TGETLABCON INP=@CssCalib
+  TGETLABCON INP=@CssFlight
+  TGETLABCON INP=@CssS2
+  TGETLABCON INP=@CssTour
+
+  let $echo="no"
+
+disable-log
+end-proc

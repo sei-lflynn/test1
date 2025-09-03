@@ -1,0 +1,356 @@
+interface Error {
+  message: String!
+}
+
+enum FallibleStatus {
+  SUCCESS
+  FAILURE
+}
+
+interface Fallible {
+  status: FallibleStatus!
+  errors: [Error!]!
+}
+
+type Mutation {
+  addExternalDataset(
+    planId: Int!,
+    simulationDatasetId: Int,
+    datasetStart: String!,
+    profileSet: ProfileSet!
+  ): AddExternalDatasetResponse
+}
+
+type Mutation {
+  extendExternalDataset(datasetId: Int!, profileSet: ProfileSet!): AddExternalDatasetResponse
+}
+
+type Mutation {
+  uploadDictionary(dictionary: String!, persistDictionaryToFilesystem: Boolean!): DictionaryResponse
+}
+
+type Mutation {
+  addCommandExpansionTypeScript(
+    activityTypeName: String!
+    expansionLogic: String!
+    parcelId: Int
+    authoringMissionModelId: Int
+  ): AddCommandExpansionResponse
+}
+
+type Mutation {
+  assignActivitiesByFilter(
+    filterId: Int!,
+    simulationDatasetId: Int!,
+    seqId: String!,
+    timeRangeStart: String!,
+    timeRangeEnd: String!
+  ): AssignActivitiesByFilterResponse
+}
+
+type Mutation {
+  addTemplate(
+    name: String!
+    modelId: Int!
+    parcelId: Int!
+    templateDefinition: String!
+    activityTypeName: String!
+    language: String!
+  ): AddTemplateResponse
+}
+
+type Mutation {
+  createExpansionSet(
+    parcelId: Int!,
+    missionModelId: Int!,
+    expansionIds: [Int!]!,
+    description: String,
+    name: String
+  ): ExpansionSetResponse
+}
+
+type Mutation {
+  expandAllActivities(expansionSetId: Int!, simulationDatasetId: Int!): ExpandAllActivitiesResponse
+}
+
+type Mutation {
+  expandAllTemplates(
+    seqIds: [String!]!,
+    simulationDatasetId: Int!,
+    modelId: Int!
+  ): ExpandAllSequencesResponse
+}
+
+type Query {
+  getModelEffectiveArguments(missionModelId: Int!, modelArguments: ModelArguments!): EffectiveArgumentsResponse
+}
+
+type Query {
+  getActivityEffectiveArguments(
+    missionModelId: Int!
+    activityTypeName: String!
+    activityArguments: ActivityArguments!
+  ): EffectiveArgumentsResponse
+  @deprecated(reason: "Use bulk query getActivityEffectiveArgumentsBulk instead")
+}
+
+type Query {
+  getActivityEffectiveArgumentsBulk(
+    missionModelId: Int!
+    activities: [EffectiveArgumentsInput!]!
+  ): [EffectiveArgumentsResponse!]!
+}
+
+type Query {
+  getActivityTypeScript(missionModelId: Int!, activityTypeName: String!): DslTypescriptResponse
+}
+
+type Query {
+  getCommandTypeScript(commandDictionaryId: Int!): DslTypescriptResponse
+}
+
+type Query {
+  resourceTypes(missionModelId: Int!): [ResourceType!]!
+}
+
+type Query {
+  schedule(specificationId: Int!): SchedulingResponse
+}
+
+type Query {
+  schedulingDslTypescript(missionModelId: Int!, planId: Int): DslTypescriptResponse
+}
+
+type Query {
+  constraintsDslTypescript(missionModelId: Int!, planId: Int): DslTypescriptResponse
+}
+
+type Query {
+  simulate(planId: Int!, force: Boolean): MerlinSimulationResponse
+}
+
+type Query {
+  resourceSamples(planId: Int!): ResourceSamplesResponse
+}
+
+type Query {
+  constraintViolations(planId: Int!, simulationDatasetId: Int, force: Boolean): ConstraintResponse!
+}
+
+type Query {
+  validateActivityArguments(
+    activityTypeName: String!
+    missionModelId: Int!
+    activityArguments: ActivityArguments!
+  ): ValidationResponse
+}
+
+type Query {
+  validateModelArguments(missionModelId: Int!, modelArguments: ModelArguments!): ValidationResponse
+}
+
+type Query {
+  validatePlan(planId: Int!): ValidationResponse
+}
+
+type Query {
+  getSequenceSeqJson(seqId: String!, simulationDatasetId: Int!): GetSeqJsonResponse!
+    @deprecated(reason: "Use bulk query getSequenceSeqJsonBulk instead")
+}
+
+input GetSequenceSeqJsonsInput {
+  seqId: String!
+  simulationDatasetId: Int!
+}
+
+type Query {
+  getSequenceSeqJsonBulk(inputs: [GetSequenceSeqJsonsInput!]!): [GetSeqJsonResponse!]!
+}
+
+type GetSeqJsonResponse implements Fallible {
+  status: FallibleStatus!
+  errors: [UserCodeError!]!
+  seqJson: SequenceSeqJson
+}
+
+enum MerlinSimulationStatus {
+  complete
+  failed
+  incomplete
+}
+
+enum SchedulingStatus {
+  complete
+  failed
+  incomplete
+}
+
+type ResourceType {
+  name: String!
+  schema: ResourceSchema!
+}
+
+type MerlinSimulationResponse {
+  status: MerlinSimulationStatus!
+  simulationDatasetId: Int!
+  reason: MerlinSimulationFailureReason
+}
+
+type ValidationResponse {
+  errors: [ValidationNotice!]
+  success: Boolean!
+}
+
+type ValidationNotice {
+  subjects: [String!]!
+  message: String!
+}
+
+type EffectiveArgumentsResponse {
+  success: Boolean!
+  arguments: ActivityArguments
+  errors: [String!]
+  typeName: String
+}
+
+type AddExternalDatasetResponse {
+  datasetId: Int!
+}
+
+type SchedulingResponse {
+  status: SchedulingStatus!
+  reason: SchedulingFailureReason
+  analysisId: Int!
+  datasetId: Int
+}
+
+type DslTypescriptResponse {
+  status: DslTypescriptResponseStatus!
+  typescriptFiles: [TypescriptFile!]
+  reason: String
+}
+
+enum DslTypescriptResponseStatus {
+  success
+  failure
+}
+
+type TypescriptFile {
+  filePath: String
+  content: String
+}
+
+type DictionaryResponse {
+  command: Dictionary
+  parameter: Dictionary
+  channel: Dictionary
+}
+
+type ExpansionSetResponse {
+  id: Int!
+}
+
+type AddCommandExpansionResponse {
+  id: Int!
+  errors: [UserCodeError!]
+}
+
+type AddTemplateResponse {
+  id: Int!
+  errors: [UserCodeError!]
+}
+
+type AssignActivitiesByFilterResponse {
+  success: Boolean!
+}
+
+type ExpandAllActivitiesResponse {
+  id: Int!
+  expandedActivityInstances: [ExpandedActivityInstance!]!
+}
+
+type ExpandAllSequencesResponse {
+  success: Boolean!
+  expandedSequencesBySeqId: json!
+}
+
+type ExpandedActivityInstance {
+  id: Int!
+  commands: [CommandSeqJson!]
+  errors: [UserCodeError!]!
+}
+
+type UserCodeError implements Error {
+  message: String!
+  stack: String!
+  location: CodeLocation
+}
+
+type CodeLocation {
+  line: Int!
+  column: Int!
+}
+
+type ResourceSamplesResponse {
+  resourceSamples: ResourceSamples!
+}
+
+type ConstraintResponse {
+   requestId: Int!,
+   constraintsRun: [ConstraintsRun!]!
+}
+
+type ConstraintsRun {
+  success: String!
+  constraintId: Int!,
+  constraintInvocationId: Int!,
+  constraintRevision: Int!,
+  constraintName: String!,
+  errors: [UserCodeError!]!
+  results: [ConstraintResult!]!
+}
+
+type ConstraintResult {
+  violations: [ConstraintViolation!]!,
+  gaps: [Interval!]!
+  resourceIds: [String!]!
+}
+
+type ConstraintViolation {
+  windows: [Interval!]!,
+  activityInstanceIds: [Int!]!
+}
+
+type Interval {
+  start: Int!,
+  end: Int!
+}
+
+input EffectiveArgumentsInput {
+  activityTypeName: String!
+  activityArguments: ActivityArguments!
+}
+
+scalar ResourceSchema
+
+scalar ResourceSamples
+
+scalar MerlinSimulationFailureReason
+
+scalar ModelArguments
+
+scalar ActivityArguments
+
+scalar ProfileSet
+
+scalar SchedulingFailureReason
+
+scalar CommandArgumentsSeqJson
+
+scalar CommandSeqJson
+
+scalar SequenceSeqJson
+
+scalar Dictionary
+
+scalar Any

@@ -1,0 +1,13 @@
+procedure
+refgbl $echo
+refgbl $syschar
+body
+enable-log
+
+let _onfail="continue"
+let $echo="yes"
+
+tzficor f1636832.geo
+
+disable-log
+end-proc
