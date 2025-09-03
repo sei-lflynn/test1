@@ -120,7 +120,7 @@ jobs:
           args: >-
             --sarif-file-output=${{ env.SARIF_OUT }}
             # Optional gates (uncomment to enforce):
-            # --severity-threshold=high
+            --severity-threshold=low
             # --fail-on=all
 
       # Verify that a SARIF file exists; this guards the upload job.
