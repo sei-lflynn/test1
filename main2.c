@@ -4,6 +4,7 @@
 #include <string.h>
 
 // demo file from https://github.com/r-sei-test/scripting-test/blob/main/main.c
+// kickoff tests?
 
 // Hardcoded file
 #define CREDENTIALS_FILE "users.txt"
