@@ -172,7 +172,18 @@ jobs:
           if [[ -n "${SEMGREP_APP_TOKEN:-}" ]]; then
             semgrep ci --sarif --output "${SARIF_FILE}"
           else
-            semgrep scan --config p/ci --sarif --output "${SARIF_FILE}"
+#            semgrep scan --config p/ci --sarif --output "${SARIF_FILE}"
+             semgrep scan \
+               --config auto \
+               --config p/owasp-top-ten \
+               --config p/cwe-top-25 \
+               --config p/security-audit \
+               --config p/secrets \
+               --timeout=30 \
+               --timeout-threshold=0 \
+               --max-target-bytes=0 \
+               --dataflow-traces \
+               --sarif-output="${SARIF_FILE}"
           fi
 
       # Verify we actually produced a SARIF (guards the upload job)
