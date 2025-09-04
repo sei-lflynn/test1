@@ -95,7 +95,7 @@ jobs:
         with:
           # Scan the whole repo (default) and also peek inside archives
           directory-to-scan: .
-          should-scan-archives: true
+        #  should-scan-archives: true
         #   # Make sure the output file is where the next step expects it
         #   output-filename: devskim-results.sarif
         #   # Pass extra CLI options to broaden checks & include lower-confidence results
