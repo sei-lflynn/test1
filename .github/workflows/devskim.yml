@@ -97,12 +97,11 @@ jobs:
           directory-to-scan: .
           should-scan-archives: true
           # Make sure the output file is where the next step expects it
-          output-filename: devskim-results.sarif
+          # output-filename: devskim-results.sarif
           # Pass extra CLI options to broaden checks & include lower-confidence results
-          # extra-options: >
-          #   --confidence High,Medium,Low
-          #   --severity Critical,Important,Moderate,BestPractice,ManualReview
-          #   --crawl-archives
+          extra-options: >
+            --confidence High,Medium,Low
+            --severity Critical,Important,Moderate,BestPractice,ManualReview
 
       # Upload the SARIF so:
       #   1) We keep an auditable copy with a retention policy
