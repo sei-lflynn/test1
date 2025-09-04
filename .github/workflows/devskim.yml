@@ -100,7 +100,7 @@ jobs:
           output-filename: devskim-results.sarif
           # Pass extra CLI options to broaden checks & include lower-confidence results
           extra-options: >
-            --confidence High
+            --confidence High,Medium,Low
             --severity Critical,Important,Moderate,BestPractice,ManualReview
 
       # Upload the SARIF so:
