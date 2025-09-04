@@ -102,7 +102,6 @@ jobs:
           extra-options: >
             --confidence High
             --severity Critical,Important,Moderate,BestPractice,ManualReview
-            #--confidence High,Medium,Low
 
       # Upload the SARIF so:
       #   1) We keep an auditable copy with a retention policy
