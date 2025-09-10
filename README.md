@@ -13,7 +13,7 @@ The code comes from various sources:
 * some was developed by myself, with GPT-5, and purposely incorporates a noncompliant-code example from a rule in a SEI CERT coding standard:
   * `DeserializeExample.java` contains a noncompliant-code example from SER12-J at https://wiki.sei.cmu.edu/confluence/display/java/SER12-J.+Prevent+deserialization+of+untrusted+data
   * `NoncompliantCertExample.java` contains a bad-code example from STR00-J at https://wiki.sei.cmu.edu/confluence/display/java/STR00-J.+Don%27t+form+strings+containing+partial+characters+from+variable-width+encodings
-* `main2.c` was copied from `main.c` from  this repository, with verbal permission from its author https://github.com/r-sei-test/scripting-test/blob/main/main.c
+* `main.c` was copied from `main.c` from  this repository, with verbal permission from its author https://github.com/r-sei-test/scripting-test/blob/main/main.c
 * `Dockerfile.prereq` comes from the Redemption APR Tool https://github.com/cmu-sei/redemption/blob/main/Dockerfile.prereq which has an MIT (SEI)-style license which permits this use
 * some was copied from NIST SARD, with public domain or open-source licenses allowing this use:
   * `memory_leak_container.cpp` (example of CWE-401) from https://samate.nist.gov/SARD/test-cases/1967/versions/1.0.0

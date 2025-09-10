@@ -43,7 +43,7 @@ JAVA_SOURCES = OSCommandInjection_078.java \
 JAVA_CLASSES = $(JAVA_SOURCES:.java=.class)
 
 C_SOURCES = hello.world.c \
-            main2.c
+            main.c
 C_BINS = $(C_SOURCES:.c=)
 
 CPP_SOURCES = $(wildcard *.cpp)
