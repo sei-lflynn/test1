@@ -17,10 +17,10 @@
 .DEFAULT_GOAL := all
 
 JAVAC = javac
-# CC = gcc
-# CXX = g++
-CC = clang
-CXX = clang++
+CC = gcc
+CXX = g++
+# CC = clang
+# CXX = clang++
 OBJC = gcc   # On most systems, gcc with -ObjC handles Objective-C
 
 # --- Objective-C toolchain & flags (auto-detect OS) ---
