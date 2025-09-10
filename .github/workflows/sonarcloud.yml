@@ -102,7 +102,7 @@ jobs:
           mkdir -p "${BW_OUT}"
           # Build Wrapper captures the compile so the analyzer knows exactly how files were built
           build-wrapper-linux-x86-64 --out-dir "${BW_OUT}" \
-            sh 'make'
+            sh -c 'make'
         timeout-minutes: 5
 
       # Fail fast if the wrapper didn't produce the expected file
